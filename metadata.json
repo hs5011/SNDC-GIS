@@ -1,0 +1,7 @@
+{
+  "name": "Hệ Thống Quản Lý Số Nhà Toàn Diện",
+  "description": "Phân hệ quản lý số nhà hiện đại hỗ trợ tra cứu, cập nhật dữ liệu dân cư, pháp lý và định vị bản đồ GIS chuyên sâu.",
+  "requestFramePermissions": [
+    "geolocation"
+  ]
+}
