@@ -1,7 +1,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { PolicyRecord, HouseNumberRecord, RelationshipType, PolicyType } from '../types';
-import { X, Save, Search, CheckCircle2, Building, Plus, Trash2, ShieldCheck, List, Wallet, Activity } from 'lucide-react';
+import { X, Save, Search, CheckCircle2, Building, Plus, Trash2, ShieldCheck, List, Wallet, Activity, UserCog } from 'lucide-react';
 
 interface PolicyFormProps {
   initialData?: Partial<PolicyRecord>;
@@ -36,6 +36,7 @@ const PolicyForm: React.FC<PolicyFormProps> = ({
     SoQuanLyHS: '',
     SoTien: 0,
     TyLeTonThuong: '',
+    NguoiNhanThay: '',
     GhiChu: ''
   });
 
@@ -52,6 +53,16 @@ const PolicyForm: React.FC<PolicyFormProps> = ({
     return houseRecords.find(h => h.id === selectedHouseId);
   }, [selectedHouseId, houseRecords]);
 
+  // Danh sách các thành viên có thể nhận thay (Chủ hộ + các thành viên khác)
+  const availableReceivers = useMemo(() => {
+    if (!selectedHouse) return [];
+    const members = [
+      { id: 'chuho', name: `${selectedHouse.TenChuHo} (Chủ hộ)` },
+      ...(selectedHouse.QuanHeChuHo || []).map(m => ({ id: m.id, name: `${m.HoTen} (${m.QuanHe})` }))
+    ];
+    return members;
+  }, [selectedHouse]);
+
   const handleAddToList = () => {
     if (!currentPolicy.HoTen) return alert('Vui lòng nhập họ tên đối tượng chính sách');
     if (!currentPolicy.LoaiDienChinhSach) return alert('Vui lòng chọn loại diện chính sách');
@@ -64,6 +75,7 @@ const PolicyForm: React.FC<PolicyFormProps> = ({
       SoQuanLyHS: '',
       SoTien: 0,
       TyLeTonThuong: '',
+      NguoiNhanThay: '',
       GhiChu: ''
     });
   };
@@ -222,6 +234,17 @@ const PolicyForm: React.FC<PolicyFormProps> = ({
                       className="w-full px-3 py-2 border rounded-lg outline-none focus:ring-2 focus:ring-indigo-500 text-sm font-bold text-emerald-600" 
                     />
                   </div>
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-slate-600 flex items-center gap-1"><UserCog size={12}/> Người nhận thay</label>
+                    <select 
+                      value={currentPolicy.NguoiNhanThay || ''} 
+                      onChange={e => setCurrentPolicy({...currentPolicy, NguoiNhanThay: e.target.value})} 
+                      className="w-full px-3 py-2 border rounded-lg outline-none focus:ring-2 focus:ring-indigo-500 text-sm font-semibold text-blue-700 bg-blue-50"
+                    >
+                      <option value="">-- Chính chủ (không nhận thay) --</option>
+                      {availableReceivers.map(rec => <option key={rec.id} value={rec.name}>{rec.name}</option>)}
+                    </select>
+                  </div>
                   <div className="col-span-full space-y-1">
                     <label className="text-xs font-bold text-slate-600">Ghi chú</label>
                     <textarea 
@@ -253,7 +276,7 @@ const PolicyForm: React.FC<PolicyFormProps> = ({
                       <tr className="text-[10px] font-bold uppercase text-slate-400">
                         <th className="px-4 py-3">Đối tượng</th>
                         <th className="px-4 py-3">Diện chính sách</th>
-                        <th className="px-4 py-3 text-center">Tỷ lệ tổn thương</th>
+                        <th className="px-4 py-3 text-center">Người nhận thay</th>
                         <th className="px-4 py-3 text-right">Số tiền</th>
                         <th className="px-4 py-3 text-right">#</th>
                       </tr>
@@ -264,7 +287,9 @@ const PolicyForm: React.FC<PolicyFormProps> = ({
                           <tr key={idx} className="hover:bg-slate-50 group transition-colors">
                             <td className="px-4 py-3 font-bold text-slate-700">{p.HoTen} <span className="text-[10px] font-normal text-slate-400">({p.QuanHe})</span></td>
                             <td className="px-4 py-3 text-indigo-700 font-medium">{p.LoaiDienChinhSach}</td>
-                            <td className="px-4 py-3 text-center font-bold text-red-600">{p.TyLeTonThuong || '--'}</td>
+                            <td className="px-4 py-3 text-center">
+                              {p.NguoiNhanThay ? <span className="text-[10px] text-blue-600 font-bold bg-blue-50 px-2 py-0.5 rounded">{p.NguoiNhanThay}</span> : <span className="text-[10px] text-slate-400">Chính chủ</span>}
+                            </td>
                             <td className="px-4 py-3 text-right font-black text-emerald-600">{(p.SoTien || 0).toLocaleString()}</td>
                             <td className="px-4 py-3 text-right">
                               <button onClick={() => removeFromList(idx)} className="p-1.5 hover:bg-red-50 text-red-500 rounded-lg transition-colors">

@@ -1,7 +1,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { SocialProtectionRecord, HouseNumberRecord, RelationshipType, SocialProtectionType } from '../types';
-import { X, Save, Search, CheckCircle2, Building, Plus, Trash2, HeartHandshake, List, Wallet } from 'lucide-react';
+import { X, Save, Search, CheckCircle2, Building, Plus, Trash2, HeartHandshake, List, Wallet, UserCog } from 'lucide-react';
 
 interface SocialProtectionFormProps {
   initialData?: Partial<SocialProtectionRecord>;
@@ -35,6 +35,7 @@ const SocialProtectionForm: React.FC<SocialProtectionFormProps> = ({
     LoaiDien: '',
     SoQuanLyHS: '',
     SoTien: 0,
+    NguoiNhanThay: '',
     GhiChu: ''
   });
 
@@ -51,6 +52,15 @@ const SocialProtectionForm: React.FC<SocialProtectionFormProps> = ({
     return houseRecords.find(h => h.id === selectedHouseId);
   }, [selectedHouseId, houseRecords]);
 
+  const availableReceivers = useMemo(() => {
+    if (!selectedHouse) return [];
+    const members = [
+      { id: 'chuho', name: `${selectedHouse.TenChuHo} (Chủ hộ)` },
+      ...(selectedHouse.QuanHeChuHo || []).map(m => ({ id: m.id, name: `${m.HoTen} (${m.QuanHe})` }))
+    ];
+    return members;
+  }, [selectedHouse]);
+
   const handleAddToList = () => {
     if (!currentRecord.HoTen) return alert('Vui lòng nhập họ tên đối tượng');
     if (!currentRecord.LoaiDien) return alert('Vui lòng chọn loại diện bảo trợ');
@@ -62,6 +72,7 @@ const SocialProtectionForm: React.FC<SocialProtectionFormProps> = ({
       LoaiDien: '',
       SoQuanLyHS: '',
       SoTien: 0,
+      NguoiNhanThay: '',
       GhiChu: ''
     });
   };
@@ -90,7 +101,6 @@ const SocialProtectionForm: React.FC<SocialProtectionFormProps> = ({
         </div>
 
         <div className="flex-1 overflow-y-auto p-6 space-y-8 custom-scrollbar">
-          {/* Section 1: House Selection */}
           <div className="space-y-4">
             <label className="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
               <Building size={14} className="text-blue-600" /> 1. Chọn số nhà liên kết
@@ -110,7 +120,7 @@ const SocialProtectionForm: React.FC<SocialProtectionFormProps> = ({
                 </div>
 
                 {filteredHouses.length > 0 && (
-                  <div className="absolute top-full left-0 right-0 z-20 mt-1 bg-white border rounded-lg shadow-xl overflow-hidden divide-y">
+                  <div className="absolute top-full left-0 right-0 z-10 mt-1 bg-white border rounded-lg shadow-xl overflow-hidden divide-y">
                     {filteredHouses.map(house => (
                       <button 
                         key={house.id}
@@ -154,7 +164,6 @@ const SocialProtectionForm: React.FC<SocialProtectionFormProps> = ({
             )}
           </div>
 
-          {/* Section 2: Input Details */}
           {selectedHouseId && (
             <div className="space-y-6 border-t pt-6 animation-fade-in">
               <label className="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
@@ -212,6 +221,17 @@ const SocialProtectionForm: React.FC<SocialProtectionFormProps> = ({
                       className="w-full px-3 py-2 border rounded-lg outline-none focus:ring-2 focus:ring-emerald-500 text-sm font-bold text-emerald-600" 
                     />
                   </div>
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-slate-600 flex items-center gap-1"><UserCog size={12}/> Người nhận thay</label>
+                    <select 
+                      value={currentRecord.NguoiNhanThay || ''} 
+                      onChange={e => setCurrentRecord({...currentRecord, NguoiNhanThay: e.target.value})} 
+                      className="w-full px-3 py-2 border rounded-lg outline-none focus:ring-2 focus:ring-emerald-500 text-sm font-semibold text-blue-700 bg-blue-50"
+                    >
+                      <option value="">-- Chính chủ (không nhận thay) --</option>
+                      {availableReceivers.map(rec => <option key={rec.id} value={rec.name}>{rec.name}</option>)}
+                    </select>
+                  </div>
                   <div className="col-span-full space-y-1">
                     <label className="text-xs font-bold text-slate-600">Ghi chú</label>
                     <textarea 
@@ -233,7 +253,6 @@ const SocialProtectionForm: React.FC<SocialProtectionFormProps> = ({
                 </div>
               </div>
 
-              {/* Waiting List */}
               <div className="space-y-3">
                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
                   <List size={14} className="text-emerald-600" /> Danh sách đang chờ lưu ({recordsList.length})
@@ -244,7 +263,7 @@ const SocialProtectionForm: React.FC<SocialProtectionFormProps> = ({
                       <tr className="text-[10px] font-bold uppercase text-slate-400">
                         <th className="px-4 py-3">Đối tượng</th>
                         <th className="px-4 py-3">Loại diện bảo trợ</th>
-                        <th className="px-4 py-3">Số hồ sơ</th>
+                        <th className="px-4 py-3 text-center">Người nhận thay</th>
                         <th className="px-4 py-3 text-right">Số tiền</th>
                         <th className="px-4 py-3 text-right">#</th>
                       </tr>
@@ -255,7 +274,9 @@ const SocialProtectionForm: React.FC<SocialProtectionFormProps> = ({
                           <tr key={idx} className="hover:bg-slate-50 group transition-colors">
                             <td className="px-4 py-3 font-bold text-slate-700">{r.HoTen} <span className="text-[10px] font-normal text-slate-400">({r.QuanHe})</span></td>
                             <td className="px-4 py-3 text-emerald-700 font-medium">{r.LoaiDien}</td>
-                            <td className="px-4 py-3 font-mono text-slate-500">{r.SoQuanLyHS || '--'}</td>
+                            <td className="px-4 py-3 text-center">
+                              {r.NguoiNhanThay ? <span className="text-[10px] text-blue-600 font-bold bg-blue-50 px-2 py-0.5 rounded">{r.NguoiNhanThay}</span> : <span className="text-[10px] text-slate-400">Chính chủ</span>}
+                            </td>
                             <td className="px-4 py-3 text-right font-black text-emerald-600">{(r.SoTien || 0).toLocaleString()}</td>
                             <td className="px-4 py-3 text-right">
                               <button onClick={() => removeFromList(idx)} className="p-1.5 hover:bg-red-50 text-red-500 rounded-lg transition-colors">

@@ -1,7 +1,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { MeritRecord, HouseNumberRecord, RelationshipType, MeritType } from '../types';
-import { X, Save, Search, CheckCircle2, User, Building, Plus, Trash2, Heart, List, Wallet } from 'lucide-react';
+import { X, Save, Search, CheckCircle2, User, Building, Plus, Trash2, Heart, List, Wallet, UserCog } from 'lucide-react';
 
 interface MeritFormProps {
   initialData?: Partial<MeritRecord>;
@@ -35,6 +35,7 @@ const MeritForm: React.FC<MeritFormProps> = ({
     LoaiDoiTuong: '',
     SoQuanLyHS: '',
     SoTien: 0,
+    NguoiNhanThay: '',
     GhiChu: ''
   });
 
@@ -51,6 +52,15 @@ const MeritForm: React.FC<MeritFormProps> = ({
     return houseRecords.find(h => h.id === selectedHouseId);
   }, [selectedHouseId, houseRecords]);
 
+  const availableReceivers = useMemo(() => {
+    if (!selectedHouse) return [];
+    const members = [
+      { id: 'chuho', name: `${selectedHouse.TenChuHo} (Chủ hộ)` },
+      ...(selectedHouse.QuanHeChuHo || []).map(m => ({ id: m.id, name: `${m.HoTen} (${m.QuanHe})` }))
+    ];
+    return members;
+  }, [selectedHouse]);
+
   const handleAddToList = () => {
     if (!currentMerit.HoTen) return alert('Vui lòng nhập họ tên đối tượng/liệt sỹ');
     if (!currentMerit.LoaiDoiTuong) return alert('Vui lòng chọn loại đối tượng');
@@ -62,6 +72,7 @@ const MeritForm: React.FC<MeritFormProps> = ({
       LoaiDoiTuong: '',
       SoQuanLyHS: '',
       SoTien: 0,
+      NguoiNhanThay: '',
       GhiChu: ''
     });
   };
@@ -212,6 +223,17 @@ const MeritForm: React.FC<MeritFormProps> = ({
                       className="w-full px-3 py-2 border rounded-lg outline-none focus:ring-2 focus:ring-blue-500 text-sm font-bold text-emerald-600" 
                     />
                   </div>
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-slate-600 flex items-center gap-1"><UserCog size={12}/> Người nhận thay</label>
+                    <select 
+                      value={currentMerit.NguoiNhanThay || ''} 
+                      onChange={e => setCurrentMerit({...currentMerit, NguoiNhanThay: e.target.value})} 
+                      className="w-full px-3 py-2 border rounded-lg outline-none focus:ring-2 focus:ring-rose-500 text-sm font-semibold text-rose-700 bg-rose-50"
+                    >
+                      <option value="">-- Chính chủ (không nhận thay) --</option>
+                      {availableReceivers.map(rec => <option key={rec.id} value={rec.name}>{rec.name}</option>)}
+                    </select>
+                  </div>
                   <div className="col-span-full space-y-1">
                     <label className="text-xs font-bold text-slate-600">Ghi chú</label>
                     <textarea 
@@ -243,8 +265,7 @@ const MeritForm: React.FC<MeritFormProps> = ({
                     <thead className="bg-slate-50 border-b">
                       <tr className="text-[10px] font-bold uppercase text-slate-400">
                         <th className="px-4 py-3">Đối tượng / Liệt sỹ</th>
-                        <th className="px-4 py-3">Loại đối tượng</th>
-                        <th className="px-4 py-3">Hồ sơ</th>
+                        <th className="px-4 py-3 text-center">Người nhận thay</th>
                         <th className="px-4 py-3 text-right">Số tiền</th>
                         <th className="px-4 py-3 text-right">#</th>
                       </tr>
@@ -254,8 +275,9 @@ const MeritForm: React.FC<MeritFormProps> = ({
                         meritsList.map((m, idx) => (
                           <tr key={idx} className="hover:bg-slate-50 group transition-colors">
                             <td className="px-4 py-3 font-bold text-slate-700">{m.HoTen} <span className="text-[10px] font-normal text-slate-400">({m.QuanHe})</span></td>
-                            <td className="px-4 py-3 text-rose-600 font-medium">{m.LoaiDoiTuong}</td>
-                            <td className="px-4 py-3 font-mono text-slate-500">{m.SoQuanLyHS || '--'}</td>
+                            <td className="px-4 py-3 text-center">
+                              {m.NguoiNhanThay ? <span className="text-[10px] text-rose-600 font-bold bg-rose-50 px-2 py-0.5 rounded">{m.NguoiNhanThay}</span> : <span className="text-[10px] text-slate-400">Chính chủ</span>}
+                            </td>
                             <td className="px-4 py-3 text-right font-black text-emerald-600">{(m.SoTien || 0).toLocaleString()}</td>
                             <td className="px-4 py-3 text-right">
                               <button onClick={() => removeFromList(idx)} className="p-1.5 hover:bg-red-50 text-red-500 rounded-lg transition-colors">

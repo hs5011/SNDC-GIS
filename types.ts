@@ -103,6 +103,7 @@ export interface GeneralRecord {
   Dien: 'TW' | 'Thành ủy';
   DiaChiThuongTru: string;
   TinhTrang: string;
+  NguoiNhanThay?: string; // Mới thêm
   GhiChu?: string;
   Status: 'Active' | 'Inactive';
   CreatedAt: string;
@@ -117,6 +118,7 @@ export interface MeritRecord {
   LoaiDoiTuong: string;
   SoQuanLyHS: string;
   SoTien: number;
+  NguoiNhanThay?: string; // Mới thêm
   GhiChu?: string;
   Status: 'Active' | 'Inactive';
   CreatedAt: string;
@@ -131,6 +133,7 @@ export interface MedalRecord {
   LoaiDoiTuong: string;
   SoQuanLyHS: string;
   SoTien: number;
+  NguoiNhanThay?: string; // Mới thêm
   GhiChu?: string;
   Status: 'Active' | 'Inactive';
   CreatedAt: string;
@@ -146,6 +149,7 @@ export interface PolicyRecord {
   SoQuanLyHS: string;
   SoTien: number;
   TyLeTonThuong: string;
+  NguoiNhanThay?: string; // Mới thêm
   GhiChu?: string;
   Status: 'Active' | 'Inactive';
   CreatedAt: string;
@@ -155,11 +159,12 @@ export interface PolicyRecord {
 export interface SocialProtectionRecord {
   id: string;
   LinkedHouseId: string;
-  HoTen: string; // Họ tên đối tượng (Prompt ghi họ tên liệt sỹ nhưng context là BTXH)
+  HoTen: string; 
   QuanHe: string;
-  LoaiDien: string; // NKT đặc biệt nặng, người cao tuổi...
+  LoaiDien: string; 
   SoQuanLyHS: string;
   SoTien: number;
+  NguoiNhanThay?: string; // Mới thêm
   GhiChu?: string;
   Status: 'Active' | 'Inactive';
   CreatedAt: string;
