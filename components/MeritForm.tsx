@@ -1,7 +1,7 @@
 
 import React, { useState, useMemo } from 'react';
-import { MeritRecord, HouseNumberRecord, RelationshipType, MeritType } from '../types';
-import { X, Save, Search, CheckCircle2, User, Building, Plus, Trash2, Heart, List, Wallet, UserCog, Edit, RotateCcw } from 'lucide-react';
+import { MeritRecord, HouseNumberRecord, RelationshipType, MeritType, Bank } from '../types';
+import { X, Save, Search, CheckCircle2, User, Building, Plus, Trash2, Heart, List, Wallet, UserCog, Edit, RotateCcw, CreditCard, Banknote } from 'lucide-react';
 
 interface MeritFormProps {
   initialData?: Partial<MeritRecord>;
@@ -11,6 +11,7 @@ interface MeritFormProps {
   houseRecords: HouseNumberRecord[];
   relationshipTypes: RelationshipType[];
   meritTypes: MeritType[];
+  banks: Bank[];
 }
 
 const MeritForm: React.FC<MeritFormProps> = ({ 
@@ -20,7 +21,8 @@ const MeritForm: React.FC<MeritFormProps> = ({
   isEditing, 
   houseRecords,
   relationshipTypes,
-  meritTypes
+  meritTypes,
+  banks
 }) => {
   const [selectedHouseId, setSelectedHouseId] = useState<string | undefined>(initialData?.LinkedHouseId);
   const [houseSearch, setHouseSearch] = useState('');
@@ -37,7 +39,11 @@ const MeritForm: React.FC<MeritFormProps> = ({
     SoQuanLyHS: '',
     SoTien: 0,
     NguoiNhanThay: '',
-    GhiChu: ''
+    GhiChu: '',
+    HinhThucNhan: 'Tiền mặt',
+    NganHang: '',
+    SoTaiKhoan: '',
+    ChuTaiKhoan: ''
   });
 
   const filteredHouses = useMemo(() => {
@@ -65,6 +71,11 @@ const MeritForm: React.FC<MeritFormProps> = ({
   const handleAddToList = () => {
     if (!currentMerit.HoTen) return alert('Vui lòng nhập họ tên đối tượng/liệt sỹ');
     if (!currentMerit.LoaiDoiTuong) return alert('Vui lòng chọn loại đối tượng');
+    if (currentMerit.HinhThucNhan === 'Chuyển khoản') {
+      if (!currentMerit.NganHang || !currentMerit.SoTaiKhoan || !currentMerit.ChuTaiKhoan) {
+        return alert('Vui lòng nhập đầy đủ thông tin chuyển khoản');
+      }
+    }
     
     if (editingTempIndex !== null) {
       const newList = [...meritsList];
@@ -82,7 +93,11 @@ const MeritForm: React.FC<MeritFormProps> = ({
       SoQuanLyHS: '',
       SoTien: 0,
       NguoiNhanThay: '',
-      GhiChu: ''
+      GhiChu: '',
+      HinhThucNhan: 'Tiền mặt',
+      NganHang: '',
+      SoTaiKhoan: '',
+      ChuTaiKhoan: ''
     });
   };
 
@@ -100,7 +115,11 @@ const MeritForm: React.FC<MeritFormProps> = ({
       SoQuanLyHS: '',
       SoTien: 0,
       NguoiNhanThay: '',
-      GhiChu: ''
+      GhiChu: '',
+      HinhThucNhan: 'Tiền mặt',
+      NganHang: '',
+      SoTaiKhoan: '',
+      ChuTaiKhoan: ''
     });
   };
 
@@ -123,7 +142,7 @@ const MeritForm: React.FC<MeritFormProps> = ({
         <div className="flex items-center justify-between p-6 border-b shrink-0">
           <div>
             <h2 className="text-xl font-bold text-slate-900">{isEditing ? 'Sửa hồ sơ Người có công' : 'Thêm hồ sơ Người có công'}</h2>
-            <p className="text-xs text-slate-500 italic mt-1">Tìm kiếm số nhà và nhập thông tin người có công liên quan</p>
+            <p className="text-xs text-slate-500 italic mt-1">Thông tin ưu đãi và phương thức thanh toán</p>
           </div>
           <button onClick={onClose} className="p-2 hover:bg-slate-100 rounded-full transition-colors"><X size={24} /></button>
         </div>
@@ -195,7 +214,7 @@ const MeritForm: React.FC<MeritFormProps> = ({
           {selectedHouseId && (
             <div className="space-y-6 border-t pt-6 animation-fade-in">
               <label className="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                <Heart size={14} className="text-rose-600" /> 2. Nhập thông tin Người có công
+                <Heart size={14} className="text-rose-600" /> 2. Nhập thông tin Người có công & Thanh toán
               </label>
 
               <div className={`p-6 rounded-2xl border transition-all ${editingTempIndex !== null ? 'bg-orange-50 border-orange-200 ring-2 ring-orange-200' : 'bg-slate-50 border-slate-200'} space-y-4`}>
@@ -266,6 +285,52 @@ const MeritForm: React.FC<MeritFormProps> = ({
                       {availableReceivers.map(rec => <option key={rec.id} value={rec.name}>{rec.name}</option>)}
                     </select>
                   </div>
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-slate-600 flex items-center gap-1"><Banknote size={12}/> Hình thức nhận trợ cấp</label>
+                    <select 
+                      value={currentMerit.HinhThucNhan || 'Tiền mặt'} 
+                      onChange={e => setCurrentMerit({...currentMerit, HinhThucNhan: e.target.value as any})} 
+                      className="w-full px-3 py-2 border rounded-lg outline-none focus:ring-2 focus:ring-blue-500 text-sm font-bold text-emerald-700"
+                    >
+                      <option value="Tiền mặt">Tiền mặt</option>
+                      <option value="Chuyển khoản">Chuyển khoản</option>
+                    </select>
+                  </div>
+
+                  {currentMerit.HinhThucNhan === 'Chuyển khoản' && (
+                    <div className="col-span-full grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-white border border-blue-100 rounded-xl animation-slide-down">
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-black text-slate-400 uppercase">Ngân hàng</label>
+                        <select 
+                          value={currentMerit.NganHang || ''} 
+                          onChange={e => setCurrentMerit({...currentMerit, NganHang: e.target.value})}
+                          className="w-full px-3 py-2 border rounded-lg outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                        >
+                          <option value="">-- Chọn ngân hàng --</option>
+                          {banks.map(bank => <option key={bank.id} value={bank.shortName}>{bank.shortName} - {bank.name}</option>)}
+                        </select>
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-black text-slate-400 uppercase">Số tài khoản</label>
+                        <input 
+                          value={currentMerit.SoTaiKhoan || ''} 
+                          onChange={e => setCurrentMerit({...currentMerit, SoTaiKhoan: e.target.value})}
+                          className="w-full px-3 py-2 border rounded-lg outline-none focus:ring-2 focus:ring-blue-500 text-sm font-mono"
+                          placeholder="Nhập số tài khoản..."
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-black text-slate-400 uppercase">Tên chủ tài khoản</label>
+                        <input 
+                          value={currentMerit.ChuTaiKhoan || ''} 
+                          onChange={e => setCurrentMerit({...currentMerit, ChuTaiKhoan: e.target.value.toUpperCase()})}
+                          className="w-full px-3 py-2 border rounded-lg outline-none focus:ring-2 focus:ring-blue-500 text-sm font-bold uppercase"
+                          placeholder="NGUYEN VAN A"
+                        />
+                      </div>
+                    </div>
+                  )}
+
                   <div className="col-span-full space-y-1">
                     <label className="text-xs font-bold text-slate-600">Ghi chú</label>
                     <textarea 
@@ -298,6 +363,7 @@ const MeritForm: React.FC<MeritFormProps> = ({
                       <tr className="text-[10px] font-bold uppercase text-slate-400">
                         <th className="px-4 py-3 text-center w-12">STT</th>
                         <th className="px-4 py-3">Đối tượng / Liệt sỹ</th>
+                        <th className="px-4 py-3">Nhận trợ cấp</th>
                         <th className="px-4 py-3 text-center">Người nhận thay</th>
                         <th className="px-4 py-3 text-right">Số tiền</th>
                         <th className="px-4 py-3 text-right">Thao tác</th>
@@ -309,6 +375,16 @@ const MeritForm: React.FC<MeritFormProps> = ({
                           <tr key={idx} className={`hover:bg-slate-50 group transition-colors ${editingTempIndex === idx ? 'bg-orange-50/50' : ''}`}>
                             <td className="px-4 py-3 text-center font-bold text-slate-400">{idx + 1}</td>
                             <td className="px-4 py-3 font-bold text-slate-700">{m.HoTen} <span className="text-[10px] font-normal text-slate-400">({m.QuanHe})</span></td>
+                            <td className="px-4 py-3">
+                               {m.HinhThucNhan === 'Chuyển khoản' ? (
+                                <div className="flex flex-col">
+                                  <span className="text-blue-600 font-bold flex items-center gap-1"><CreditCard size={10}/> Chuyển khoản</span>
+                                  <span className="text-[9px] text-slate-400 font-mono">{m.NganHang}</span>
+                                </div>
+                              ) : (
+                                <span className="text-emerald-600 font-bold flex items-center gap-1"><Banknote size={10}/> Tiền mặt</span>
+                              )}
+                            </td>
                             <td className="px-4 py-3 text-center">
                               {m.NguoiNhanThay ? <span className="text-[10px] text-rose-600 font-bold bg-rose-50 px-2 py-0.5 rounded">{m.NguoiNhanThay}</span> : <span className="text-[10px] text-slate-400">Chính chủ</span>}
                             </td>
@@ -327,7 +403,7 @@ const MeritForm: React.FC<MeritFormProps> = ({
                         ))
                       ) : (
                         <tr>
-                          <td colSpan={5} className="px-4 py-8 text-center text-slate-400 italic">Chưa có hồ sơ nào được thêm vào danh sách</td>
+                          <td colSpan={6} className="px-4 py-8 text-center text-slate-400 italic">Chưa có hồ sơ nào được thêm vào danh sách</td>
                         </tr>
                       )}
                     </tbody>

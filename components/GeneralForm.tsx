@@ -1,7 +1,7 @@
 
 import React, { useState, useMemo } from 'react';
-import { GeneralRecord, HouseNumberRecord, RelationshipType, GeneralStatus } from '../types';
-import { X, Save, Search, CheckCircle2, User, Building, Plus, Trash2, List, UserCog, Edit, RotateCcw } from 'lucide-react';
+import { GeneralRecord, HouseNumberRecord, RelationshipType, GeneralStatus, Bank } from '../types';
+import { X, Save, Search, CheckCircle2, User, Building, Plus, Trash2, List, UserCog, Edit, RotateCcw, CreditCard, Banknote } from 'lucide-react';
 
 interface GeneralFormProps {
   initialData?: Partial<GeneralRecord>;
@@ -11,6 +11,7 @@ interface GeneralFormProps {
   houseRecords: HouseNumberRecord[];
   relationshipTypes: RelationshipType[];
   generalStatuses: GeneralStatus[];
+  banks: Bank[];
 }
 
 const GeneralForm: React.FC<GeneralFormProps> = ({ 
@@ -20,7 +21,8 @@ const GeneralForm: React.FC<GeneralFormProps> = ({
   isEditing, 
   houseRecords,
   relationshipTypes,
-  generalStatuses
+  generalStatuses,
+  banks
 }) => {
   const [selectedHouseId, setSelectedHouseId] = useState<string | undefined>(initialData?.LinkedHouseId);
   const [houseSearch, setHouseSearch] = useState('');
@@ -37,7 +39,11 @@ const GeneralForm: React.FC<GeneralFormProps> = ({
     QuanHe: '',
     DiaChiThuongTru: '',
     NguoiNhanThay: '',
-    GhiChu: ''
+    GhiChu: '',
+    HinhThucNhan: 'Tiền mặt',
+    NganHang: '',
+    SoTaiKhoan: '',
+    ChuTaiKhoan: ''
   });
 
   const filteredHouses = useMemo(() => {
@@ -65,6 +71,11 @@ const GeneralForm: React.FC<GeneralFormProps> = ({
   const handleAddToList = () => {
     if (!currentGeneral.HoTen) return alert('Vui lòng nhập họ tên tướng lĩnh');
     if (!currentGeneral.TinhTrang) return alert('Vui lòng chọn tình trạng');
+    if (currentGeneral.HinhThucNhan === 'Chuyển khoản') {
+      if (!currentGeneral.NganHang || !currentGeneral.SoTaiKhoan || !currentGeneral.ChuTaiKhoan) {
+        return alert('Vui lòng nhập đầy đủ thông tin chuyển khoản');
+      }
+    }
     
     if (editingTempIndex !== null) {
       const newList = [...generalsList];
@@ -82,7 +93,11 @@ const GeneralForm: React.FC<GeneralFormProps> = ({
       QuanHe: '',
       DiaChiThuongTru: '',
       NguoiNhanThay: '',
-      GhiChu: ''
+      GhiChu: '',
+      HinhThucNhan: 'Tiền mặt',
+      NganHang: '',
+      SoTaiKhoan: '',
+      ChuTaiKhoan: ''
     });
   };
 
@@ -100,7 +115,11 @@ const GeneralForm: React.FC<GeneralFormProps> = ({
       QuanHe: '',
       DiaChiThuongTru: '',
       NguoiNhanThay: '',
-      GhiChu: ''
+      GhiChu: '',
+      HinhThucNhan: 'Tiền mặt',
+      NganHang: '',
+      SoTaiKhoan: '',
+      ChuTaiKhoan: ''
     });
   };
 
@@ -123,7 +142,7 @@ const GeneralForm: React.FC<GeneralFormProps> = ({
         <div className="flex items-center justify-between p-6 border-b shrink-0">
           <div>
             <h2 className="text-xl font-bold text-slate-900">{isEditing ? 'Sửa thông tin tướng lĩnh' : 'Thêm hồ sơ tướng lĩnh'}</h2>
-            <p className="text-xs text-slate-500 italic mt-1">Một số nhà có thể nhập nhiều tướng lĩnh liên quan</p>
+            <p className="text-xs text-slate-500 italic mt-1">Quản lý hồ sơ và thông tin nhận trợ cấp</p>
           </div>
           <button onClick={onClose} className="p-2 hover:bg-slate-100 rounded-full transition-colors"><X size={24} /></button>
         </div>
@@ -187,7 +206,7 @@ const GeneralForm: React.FC<GeneralFormProps> = ({
               </div>
             ) : (
               <div className="border-2 border-dashed border-slate-200 rounded-xl p-6 text-center bg-slate-50">
-                <p className="text-sm text-slate-400 italic">Vui lòng chọn hồ sơ số nhà để bắt đầu nhập tướng lĩnh</p>
+                <p className="text-sm text-slate-400 italic">Vui lòng chọn hồ sơ số nhà để bắt đầu</p>
               </div>
             )}
           </div>
@@ -195,7 +214,7 @@ const GeneralForm: React.FC<GeneralFormProps> = ({
           {selectedHouseId && (
             <div className="space-y-6 border-t pt-6 animation-fade-in">
               <label className="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                <User size={14} className="text-blue-600" /> 2. Nhập thông tin tướng lĩnh
+                <User size={14} className="text-blue-600" /> 2. Nhập thông tin tướng lĩnh & Thanh toán
               </label>
 
               <div className={`p-6 rounded-2xl border transition-all ${editingTempIndex !== null ? 'bg-orange-50 border-orange-200 ring-2 ring-orange-200' : 'bg-slate-50 border-slate-200'} space-y-4`}>
@@ -259,6 +278,52 @@ const GeneralForm: React.FC<GeneralFormProps> = ({
                       {availableReceivers.map(rec => <option key={rec.id} value={rec.name}>{rec.name}</option>)}
                     </select>
                   </div>
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-slate-600 flex items-center gap-1"><Banknote size={12}/> Hình thức nhận trợ cấp</label>
+                    <select 
+                      value={currentGeneral.HinhThucNhan || 'Tiền mặt'} 
+                      onChange={e => setCurrentGeneral({...currentGeneral, HinhThucNhan: e.target.value as any})} 
+                      className="w-full px-3 py-2 border rounded-lg outline-none focus:ring-2 focus:ring-blue-500 text-sm font-bold text-emerald-700"
+                    >
+                      <option value="Tiền mặt">Tiền mặt</option>
+                      <option value="Chuyển khoản">Chuyển khoản</option>
+                    </select>
+                  </div>
+
+                  {currentGeneral.HinhThucNhan === 'Chuyển khoản' && (
+                    <div className="col-span-full grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-white border border-blue-100 rounded-xl animation-slide-down">
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-black text-slate-400 uppercase">Ngân hàng</label>
+                        <select 
+                          value={currentGeneral.NganHang || ''} 
+                          onChange={e => setCurrentGeneral({...currentGeneral, NganHang: e.target.value})}
+                          className="w-full px-3 py-2 border rounded-lg outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                        >
+                          <option value="">-- Chọn ngân hàng --</option>
+                          {banks.map(bank => <option key={bank.id} value={bank.shortName}>{bank.shortName} - {bank.name}</option>)}
+                        </select>
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-black text-slate-400 uppercase">Số tài khoản</label>
+                        <input 
+                          value={currentGeneral.SoTaiKhoan || ''} 
+                          onChange={e => setCurrentGeneral({...currentGeneral, SoTaiKhoan: e.target.value})}
+                          className="w-full px-3 py-2 border rounded-lg outline-none focus:ring-2 focus:ring-blue-500 text-sm font-mono"
+                          placeholder="Nhập số tài khoản..."
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-black text-slate-400 uppercase">Tên chủ tài khoản</label>
+                        <input 
+                          value={currentGeneral.ChuTaiKhoan || ''} 
+                          onChange={e => setCurrentGeneral({...currentGeneral, ChuTaiKhoan: e.target.value.toUpperCase()})}
+                          className="w-full px-3 py-2 border rounded-lg outline-none focus:ring-2 focus:ring-blue-500 text-sm font-bold uppercase"
+                          placeholder="NGUYEN VAN A"
+                        />
+                      </div>
+                    </div>
+                  )}
+
                   <div className="col-span-full space-y-1">
                     <label className="text-xs font-bold text-slate-600">Địa chỉ thường trú</label>
                     <input 
@@ -301,7 +366,7 @@ const GeneralForm: React.FC<GeneralFormProps> = ({
                         <th className="px-4 py-3 text-center w-12">STT</th>
                         <th className="px-4 py-3">Họ và tên</th>
                         <th className="px-4 py-3">Diện</th>
-                        <th className="px-4 py-3">Tình trạng</th>
+                        <th className="px-4 py-3">Thanh toán</th>
                         <th className="px-4 py-3 text-center">Người nhận thay</th>
                         <th className="px-4 py-3 text-right">Thao tác</th>
                       </tr>
@@ -317,7 +382,16 @@ const GeneralForm: React.FC<GeneralFormProps> = ({
                                 {g.Dien}
                               </span>
                             </td>
-                            <td className="px-4 py-3 font-medium text-slate-600">{g.TinhTrang}</td>
+                            <td className="px-4 py-3">
+                              {g.HinhThucNhan === 'Chuyển khoản' ? (
+                                <div className="flex flex-col">
+                                  <span className="text-blue-600 font-bold flex items-center gap-1"><CreditCard size={10}/> Chuyển khoản</span>
+                                  <span className="text-[9px] text-slate-400 font-mono">{g.NganHang} - {g.SoTaiKhoan}</span>
+                                </div>
+                              ) : (
+                                <span className="text-emerald-600 font-bold flex items-center gap-1"><Banknote size={10}/> Tiền mặt</span>
+                              )}
+                            </td>
                             <td className="px-4 py-3 text-center">
                                {g.NguoiNhanThay ? <span className="text-[10px] text-blue-600 font-bold bg-blue-50 px-2 py-0.5 rounded">{g.NguoiNhanThay}</span> : <span className="text-[10px] text-slate-400">Chính chủ</span>}
                             </td>

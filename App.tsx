@@ -5,8 +5,8 @@ import {
   Trash2, Edit, CheckCircle, AlertCircle,
   Home, Database, MapPin, Milestone, Building2, Landmark, Info, Layers, Eye, EyeOff, Globe, Users, ShieldAlert, Heart, Wallet, Award, ShieldCheck, Scale, HandHeart
 } from 'lucide-react';
-import { HouseNumberRecord, Street, Neighborhood, PublicLandRecord, WardBoundary, RelationshipType, GeneralRecord, GeneralStatus, MeritRecord, MeritType, MedalRecord, MedalType, PolicyRecord, PolicyType, SocialProtectionRecord, SocialProtectionType } from './types';
-import { INITIAL_DATA, INITIAL_STREETS, INITIAL_NEIGHBORHOODS, INITIAL_PUBLIC_LAND, INITIAL_WARD_BOUNDARY, INITIAL_RELATIONSHIPS, INITIAL_GENERAL_STATUS, INITIAL_MERIT_TYPES, INITIAL_MEDAL_TYPES, INITIAL_POLICY_TYPES, INITIAL_SOCIAL_PROTECTION_TYPES } from './constants';
+import { HouseNumberRecord, Street, Neighborhood, PublicLandRecord, WardBoundary, RelationshipType, GeneralRecord, GeneralStatus, MeritRecord, MeritType, MedalRecord, MedalType, PolicyRecord, PolicyType, SocialProtectionRecord, SocialProtectionType, Bank } from './types';
+import { INITIAL_DATA, INITIAL_STREETS, INITIAL_NEIGHBORHOODS, INITIAL_PUBLIC_LAND, INITIAL_WARD_BOUNDARY, INITIAL_RELATIONSHIPS, INITIAL_GENERAL_STATUS, INITIAL_MERIT_TYPES, INITIAL_MEDAL_TYPES, INITIAL_POLICY_TYPES, INITIAL_SOCIAL_PROTECTION_TYPES, INITIAL_BANKS } from './constants';
 import HouseForm from './components/HouseForm';
 import MapView from './components/MapView';
 import StreetForm from './components/StreetForm';
@@ -25,8 +25,9 @@ import PolicyTypeForm from './components/PolicyTypeForm';
 import SocialProtectionForm from './components/SocialProtectionForm';
 import SocialProtectionTypeForm from './components/SocialProtectionTypeForm';
 import HouseLookup from './components/HouseLookup';
+import BankForm from './components/BankForm';
 
-type SidebarTab = 'records' | 'search_by_house' | 'public_land' | 'generals' | 'medals' | 'merits' | 'policies' | 'social_protections' | 'planning' | 'streets' | 'neighborhoods' | 'ward_boundary' | 'relationships' | 'general_statuses' | 'merit_types' | 'medal_types' | 'policy_types' | 'social_protection_types';
+type SidebarTab = 'records' | 'search_by_house' | 'public_land' | 'generals' | 'medals' | 'merits' | 'policies' | 'social_protections' | 'planning' | 'streets' | 'neighborhoods' | 'ward_boundary' | 'relationships' | 'general_statuses' | 'merit_types' | 'medal_types' | 'policy_types' | 'social_protection_types' | 'bank_management';
 
 const App: React.FC = () => {
   const [activeSidebarTab, setActiveSidebarTab] = useState<SidebarTab>('records');
@@ -46,6 +47,7 @@ const App: React.FC = () => {
   const [policyTypes, setPolicyTypes] = useState<PolicyType[]>(INITIAL_POLICY_TYPES);
   const [socialProtectionTypes, setSocialProtectionTypes] = useState<SocialProtectionType[]>(INITIAL_SOCIAL_PROTECTION_TYPES);
   const [wardBoundary, setWardBoundary] = useState<WardBoundary>(INITIAL_WARD_BOUNDARY);
+  const [banks, setBanks] = useState<Bank[]>(INITIAL_BANKS);
   
   const [searchTerm, setSearchTerm] = useState('');
   const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
@@ -94,6 +96,9 @@ const App: React.FC = () => {
 
   const [isSptFormOpen, setIsSptFormOpen] = useState(false);
   const [editingSpt, setEditingSpt] = useState<SocialProtectionType | undefined>(undefined);
+
+  const [isBankFormOpen, setIsBankFormOpen] = useState(false);
+  const [editingBank, setEditingBank] = useState<Bank | undefined>(undefined);
 
   const [activeFilter, setActiveFilter] = useState<'all' | 'active' | 'inactive'>('active');
 
@@ -208,6 +213,14 @@ const App: React.FC = () => {
       return matchSearch && matchFilter;
     });
   }, [socialProtections, searchTerm, activeFilter]);
+
+  const filteredBanks = useMemo(() => {
+    return banks.filter(b => 
+      b.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      b.shortName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      b.code.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [banks, searchTerm]);
 
   // House CRUD
   const handleAddOrEditHouse = (data: Partial<HouseNumberRecord>) => {
@@ -513,6 +526,22 @@ const App: React.FC = () => {
     }
   };
 
+  const handleAddOrEditBank = (data: Partial<Bank>) => {
+    if (editingBank) {
+      setBanks(prev => prev.map(b => b.id === editingBank.id ? { ...b, ...data } as Bank : b));
+    } else {
+      setBanks(prev => [...prev, { ...data, id: Math.random().toString(36).substr(2, 9) } as Bank]);
+    }
+    setIsBankFormOpen(false);
+    setEditingBank(undefined);
+  };
+
+  const handleDeleteBank = (id: string) => {
+    if (window.confirm('Xác nhận xóa ngân hàng này khỏi danh mục?')) {
+      setBanks(prev => prev.filter(b => b.id !== id));
+    }
+  };
+
   const handleAddOrEditNb = (data: Partial<Neighborhood>) => {
     if (editingNb) {
       setNeighborhoods(prev => prev.map(n => n.id === editingNb.id ? { ...n, ...data } as Neighborhood : n));
@@ -576,6 +605,12 @@ const App: React.FC = () => {
         return (
           <button onClick={() => { setEditingSocial(undefined); setIsSocialFormOpen(true); }} className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl font-semibold shadow-md transition-all">
             <Plus size={18} /> Thêm hồ sơ bảo trợ
+          </button>
+        );
+      case 'bank_management':
+        return (
+          <button onClick={() => { setEditingBank(undefined); setIsBankFormOpen(true); }} className="flex items-center gap-2 bg-blue-700 hover:bg-blue-800 text-white px-4 py-2 rounded-xl font-semibold shadow-md transition-all">
+            <Plus size={18} /> Thêm ngân hàng
           </button>
         );
       case 'streets':
@@ -780,6 +815,37 @@ const App: React.FC = () => {
                   </div>
                 )}
               </div>
+            </div>
+          </div>
+        );
+      case 'bank_management':
+        return (
+          <div className="flex-1 p-6 flex flex-col gap-6">
+            <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2"><Landmark className="text-blue-700" /> Quản lý danh mục Ngân hàng</h2>
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+              <table className="w-full text-left">
+                <thead className="bg-slate-50 border-b">
+                  <tr className="text-[10px] font-bold uppercase text-slate-400">
+                    <th className="px-6 py-4 w-24">Mã</th>
+                    <th className="px-6 py-4 w-40">Viết tắt</th>
+                    <th className="px-6 py-4">Tên đầy đủ ngân hàng</th>
+                    <th className="px-6 py-4 text-right">Thao tác</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y">
+                  {filteredBanks.map(bank => (
+                    <tr key={bank.id} className="hover:bg-slate-50 group">
+                      <td className="px-6 py-4 font-mono text-xs text-blue-600">{bank.code || '--'}</td>
+                      <td className="px-6 py-4 font-bold text-slate-800">{bank.shortName}</td>
+                      <td className="px-6 py-4 text-sm text-slate-600">{bank.name}</td>
+                      <td className="px-6 py-4 text-right">
+                        <button onClick={() => { setEditingBank(bank); setIsBankFormOpen(true); }} className="p-1.5 hover:bg-blue-100 text-blue-600 rounded-lg"><Edit size={14} /></button>
+                        <button onClick={() => handleDeleteBank(bank.id)} className="p-1.5 hover:bg-red-100 text-red-600 rounded-lg ml-2"><Trash2 size={14} /></button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           </div>
         );
@@ -1256,7 +1322,7 @@ const App: React.FC = () => {
                         <input 
                           type="text" 
                           placeholder="Tìm trên bản đồ..." 
-                          className="bg-transparent border-none outline-none text-xs w-full"
+                          className="bg-transparent border-none outline-none text-sm w-full"
                           value={mapSearch}
                           onChange={(e) => setMapSearch(e.target.value)}
                         />
@@ -1326,6 +1392,7 @@ const App: React.FC = () => {
           
           <div className="pt-4 pb-2 px-4 text-[10px] font-black text-slate-500 uppercase tracking-widest">Danh mục hệ thống</div>
           <NavItem icon={<Globe size={18} />} label="Ranh giới Phường" active={activeSidebarTab === 'ward_boundary'} onClick={() => setActiveSidebarTab('ward_boundary')} />
+          <NavItem icon={<Landmark size={18} className="text-blue-400" />} label="Danh mục Ngân hàng" active={activeSidebarTab === 'bank_management'} onClick={() => setActiveSidebarTab('bank_management')} />
           <NavItem icon={<Milestone size={18} />} label="Danh mục Đường" active={activeSidebarTab === 'streets'} onClick={() => setActiveSidebarTab('streets')} />
           <NavItem icon={<Building2 size={18} />} label="Danh mục Khu phố" active={activeSidebarTab === 'neighborhoods'} onClick={() => setActiveSidebarTab('neighborhoods')} />
           <NavItem icon={<Heart size={18} className="text-rose-400" />} label="Loại đối tượng NCC" active={activeSidebarTab === 'merit_types'} onClick={() => setActiveSidebarTab('merit_types')} />
@@ -1374,6 +1441,7 @@ const App: React.FC = () => {
           houseRecords={records}
           relationshipTypes={relationships}
           generalStatuses={generalStatuses}
+          banks={banks}
         />
       )}
       {isMeritFormOpen && (
@@ -1385,6 +1453,7 @@ const App: React.FC = () => {
           houseRecords={records}
           relationshipTypes={relationships}
           meritTypes={meritTypes}
+          banks={banks}
         />
       )}
       {isMedalFormOpen && (
@@ -1396,6 +1465,7 @@ const App: React.FC = () => {
           houseRecords={records}
           relationshipTypes={relationships}
           medalTypes={medalTypes}
+          banks={banks}
         />
       )}
       {isPolicyFormOpen && (
@@ -1407,6 +1477,7 @@ const App: React.FC = () => {
           houseRecords={records}
           relationshipTypes={relationships}
           policyTypes={policyTypes}
+          banks={banks}
         />
       )}
       {isSocialFormOpen && (
@@ -1418,6 +1489,7 @@ const App: React.FC = () => {
           houseRecords={records}
           relationshipTypes={relationships}
           protectionTypes={socialProtectionTypes}
+          banks={banks}
         />
       )}
       {isStreetFormOpen && (
@@ -1443,6 +1515,9 @@ const App: React.FC = () => {
       )}
       {isSptFormOpen && (
         <SocialProtectionTypeForm initialData={editingSpt} onClose={() => { setIsSptFormOpen(false); setEditingSpt(undefined); }} onSubmit={handleAddOrEditSpt} />
+      )}
+      {isBankFormOpen && (
+        <BankForm initialData={editingBank} onClose={() => { setIsBankFormOpen(false); setEditingBank(undefined); }} onSubmit={handleAddOrEditBank} />
       )}
     </div>
   );

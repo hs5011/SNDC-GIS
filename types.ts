@@ -1,4 +1,11 @@
 
+export interface Bank {
+  id: string;
+  name: string;
+  shortName: string;
+  code: string;
+}
+
 export interface Street {
   id: string;
   name: string;
@@ -95,7 +102,14 @@ export interface PublicLandRecord {
   LinkedHouseId?: string;
 }
 
-export interface GeneralRecord {
+export interface PaymentInfo {
+  HinhThucNhan: 'Tiền mặt' | 'Chuyển khoản';
+  NganHang?: string;
+  SoTaiKhoan?: string;
+  ChuTaiKhoan?: string;
+}
+
+export interface GeneralRecord extends PaymentInfo {
   id: string;
   LinkedHouseId: string;
   HoTen: string;
@@ -103,14 +117,14 @@ export interface GeneralRecord {
   Dien: 'TW' | 'Thành ủy';
   DiaChiThuongTru: string;
   TinhTrang: string;
-  NguoiNhanThay?: string; // Mới thêm
+  NguoiNhanThay?: string;
   GhiChu?: string;
   Status: 'Active' | 'Inactive';
   CreatedAt: string;
   CreatedBy: string;
 }
 
-export interface MeritRecord {
+export interface MeritRecord extends PaymentInfo {
   id: string;
   LinkedHouseId: string;
   HoTen: string;
@@ -118,14 +132,14 @@ export interface MeritRecord {
   LoaiDoiTuong: string;
   SoQuanLyHS: string;
   SoTien: number;
-  NguoiNhanThay?: string; // Mới thêm
+  NguoiNhanThay?: string;
   GhiChu?: string;
   Status: 'Active' | 'Inactive';
   CreatedAt: string;
   CreatedBy: string;
 }
 
-export interface MedalRecord {
+export interface MedalRecord extends PaymentInfo {
   id: string;
   LinkedHouseId: string;
   HoTen: string;
@@ -133,14 +147,14 @@ export interface MedalRecord {
   LoaiDoiTuong: string;
   SoQuanLyHS: string;
   SoTien: number;
-  NguoiNhanThay?: string; // Mới thêm
+  NguoiNhanThay?: string;
   GhiChu?: string;
   Status: 'Active' | 'Inactive';
   CreatedAt: string;
   CreatedBy: string;
 }
 
-export interface PolicyRecord {
+export interface PolicyRecord extends PaymentInfo {
   id: string;
   LinkedHouseId: string;
   HoTen: string; 
@@ -149,14 +163,14 @@ export interface PolicyRecord {
   SoQuanLyHS: string;
   SoTien: number;
   TyLeTonThuong: string;
-  NguoiNhanThay?: string; // Mới thêm
+  NguoiNhanThay?: string;
   GhiChu?: string;
   Status: 'Active' | 'Inactive';
   CreatedAt: string;
   CreatedBy: string;
 }
 
-export interface SocialProtectionRecord {
+export interface SocialProtectionRecord extends PaymentInfo {
   id: string;
   LinkedHouseId: string;
   HoTen: string; 
@@ -164,7 +178,7 @@ export interface SocialProtectionRecord {
   LoaiDien: string; 
   SoQuanLyHS: string;
   SoTien: number;
-  NguoiNhanThay?: string; // Mới thêm
+  NguoiNhanThay?: string;
   GhiChu?: string;
   Status: 'Active' | 'Inactive';
   CreatedAt: string;

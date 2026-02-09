@@ -1,7 +1,7 @@
 
 import React, { useState, useMemo } from 'react';
-import { MedalRecord, HouseNumberRecord, RelationshipType, MedalType } from '../types';
-import { X, Save, Search, CheckCircle2, User, Building, Plus, Trash2, Award, List, Wallet, UserCog, Edit, RotateCcw } from 'lucide-react';
+import { MedalRecord, HouseNumberRecord, RelationshipType, MedalType, Bank } from '../types';
+import { X, Save, Search, CheckCircle2, User, Building, Plus, Trash2, Award, List, Wallet, UserCog, Edit, RotateCcw, CreditCard, Banknote } from 'lucide-react';
 
 interface MedalFormProps {
   initialData?: Partial<MedalRecord>;
@@ -11,6 +11,7 @@ interface MedalFormProps {
   houseRecords: HouseNumberRecord[];
   relationshipTypes: RelationshipType[];
   medalTypes: MedalType[];
+  banks: Bank[];
 }
 
 const MedalForm: React.FC<MedalFormProps> = ({ 
@@ -20,7 +21,8 @@ const MedalForm: React.FC<MedalFormProps> = ({
   isEditing, 
   houseRecords,
   relationshipTypes,
-  medalTypes
+  medalTypes,
+  banks
 }) => {
   const [selectedHouseId, setSelectedHouseId] = useState<string | undefined>(initialData?.LinkedHouseId);
   const [houseSearch, setHouseSearch] = useState('');
@@ -37,7 +39,11 @@ const MedalForm: React.FC<MedalFormProps> = ({
     SoQuanLyHS: '',
     SoTien: 0,
     NguoiNhanThay: '',
-    GhiChu: ''
+    GhiChu: '',
+    HinhThucNhan: 'Tiền mặt',
+    NganHang: '',
+    SoTaiKhoan: '',
+    ChuTaiKhoan: ''
   });
 
   const filteredHouses = useMemo(() => {
@@ -65,6 +71,11 @@ const MedalForm: React.FC<MedalFormProps> = ({
   const handleAddToList = () => {
     if (!currentMedal.HoTen) return alert('Vui lòng nhập họ tên người được huân chương');
     if (!currentMedal.LoaiDoiTuong) return alert('Vui lòng chọn loại huân chương');
+    if (currentMedal.HinhThucNhan === 'Chuyển khoản') {
+      if (!currentMedal.NganHang || !currentMedal.SoTaiKhoan || !currentMedal.ChuTaiKhoan) {
+        return alert('Vui lòng nhập đầy đủ thông tin chuyển khoản');
+      }
+    }
     
     if (editingTempIndex !== null) {
       const newList = [...medalsList];
@@ -82,7 +93,11 @@ const MedalForm: React.FC<MedalFormProps> = ({
       SoQuanLyHS: '',
       SoTien: 0,
       NguoiNhanThay: '',
-      GhiChu: ''
+      GhiChu: '',
+      HinhThucNhan: 'Tiền mặt',
+      NganHang: '',
+      SoTaiKhoan: '',
+      ChuTaiKhoan: ''
     });
   };
 
@@ -100,7 +115,11 @@ const MedalForm: React.FC<MedalFormProps> = ({
       SoQuanLyHS: '',
       SoTien: 0,
       NguoiNhanThay: '',
-      GhiChu: ''
+      GhiChu: '',
+      HinhThucNhan: 'Tiền mặt',
+      NganHang: '',
+      SoTaiKhoan: '',
+      ChuTaiKhoan: ''
     });
   };
 
@@ -123,7 +142,7 @@ const MedalForm: React.FC<MedalFormProps> = ({
         <div className="flex items-center justify-between p-6 border-b shrink-0">
           <div>
             <h2 className="text-xl font-bold text-slate-900">{isEditing ? 'Sửa hồ sơ Huân chương' : 'Thêm hồ sơ Huân chương KC'}</h2>
-            <p className="text-xs text-slate-500 italic mt-1">Tìm kiếm số nhà và nhập thông tin người được khen thưởng</p>
+            <p className="text-xs text-slate-500 italic mt-1">Thông tin khen thưởng và phương thức chi trả trợ cấp</p>
           </div>
           <button onClick={onClose} className="p-2 hover:bg-slate-100 rounded-full transition-colors"><X size={24} /></button>
         </div>
@@ -195,7 +214,7 @@ const MedalForm: React.FC<MedalFormProps> = ({
           {selectedHouseId && (
             <div className="space-y-6 border-t pt-6 animation-fade-in">
               <label className="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                <Award size={14} className="text-amber-600" /> 2. Nhập thông tin Huân chương kháng chiến
+                <Award size={14} className="text-amber-600" /> 2. Nhập thông tin Huân chương kháng chiến & Thanh toán
               </label>
 
               <div className={`p-6 rounded-2xl border transition-all ${editingTempIndex !== null ? 'bg-orange-50 border-orange-200 ring-2 ring-orange-200' : 'bg-slate-50 border-slate-200'} space-y-4`}>
@@ -266,6 +285,52 @@ const MedalForm: React.FC<MedalFormProps> = ({
                       {availableReceivers.map(rec => <option key={rec.id} value={rec.name}>{rec.name}</option>)}
                     </select>
                   </div>
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-slate-600 flex items-center gap-1"><Banknote size={12}/> Hình thức nhận trợ cấp</label>
+                    <select 
+                      value={currentMedal.HinhThucNhan || 'Tiền mặt'} 
+                      onChange={e => setCurrentMedal({...currentMedal, HinhThucNhan: e.target.value as any})} 
+                      className="w-full px-3 py-2 border rounded-lg outline-none focus:ring-2 focus:ring-amber-500 text-sm font-bold text-emerald-700"
+                    >
+                      <option value="Tiền mặt">Tiền mặt</option>
+                      <option value="Chuyển khoản">Chuyển khoản</option>
+                    </select>
+                  </div>
+
+                  {currentMedal.HinhThucNhan === 'Chuyển khoản' && (
+                    <div className="col-span-full grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-white border border-blue-100 rounded-xl animation-slide-down">
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-black text-slate-400 uppercase">Ngân hàng</label>
+                        <select 
+                          value={currentMedal.NganHang || ''} 
+                          onChange={e => setCurrentMedal({...currentMedal, NganHang: e.target.value})}
+                          className="w-full px-3 py-2 border rounded-lg outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                        >
+                          <option value="">-- Chọn ngân hàng --</option>
+                          {banks.map(bank => <option key={bank.id} value={bank.shortName}>{bank.shortName} - {bank.name}</option>)}
+                        </select>
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-black text-slate-400 uppercase">Số tài khoản</label>
+                        <input 
+                          value={currentMedal.SoTaiKhoan || ''} 
+                          onChange={e => setCurrentMedal({...currentMedal, SoTaiKhoan: e.target.value})}
+                          className="w-full px-3 py-2 border rounded-lg outline-none focus:ring-2 focus:ring-blue-500 text-sm font-mono"
+                          placeholder="Nhập số tài khoản..."
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-black text-slate-400 uppercase">Tên chủ tài khoản</label>
+                        <input 
+                          value={currentMedal.ChuTaiKhoan || ''} 
+                          onChange={e => setCurrentMedal({...currentMedal, ChuTaiKhoan: e.target.value.toUpperCase()})}
+                          className="w-full px-3 py-2 border rounded-lg outline-none focus:ring-2 focus:ring-blue-500 text-sm font-bold uppercase"
+                          placeholder="NGUYEN VAN A"
+                        />
+                      </div>
+                    </div>
+                  )}
+
                   <div className="col-span-full space-y-1">
                     <label className="text-xs font-bold text-slate-600">Ghi chú</label>
                     <textarea 
@@ -298,6 +363,7 @@ const MedalForm: React.FC<MedalFormProps> = ({
                       <tr className="text-[10px] font-bold uppercase text-slate-400">
                         <th className="px-4 py-3 text-center w-12">STT</th>
                         <th className="px-4 py-3">Họ tên người nhận</th>
+                        <th className="px-4 py-3">Nhận trợ cấp</th>
                         <th className="px-4 py-3 text-center">Người nhận thay</th>
                         <th className="px-4 py-3 text-right">Số tiền</th>
                         <th className="px-4 py-3 text-right">Thao tác</th>
@@ -309,6 +375,16 @@ const MedalForm: React.FC<MedalFormProps> = ({
                           <tr key={idx} className={`hover:bg-slate-50 group transition-colors ${editingTempIndex === idx ? 'bg-orange-50/50' : ''}`}>
                             <td className="px-4 py-3 text-center font-bold text-slate-400">{idx + 1}</td>
                             <td className="px-4 py-3 font-bold text-slate-700">{m.HoTen} <span className="text-[10px] font-normal text-slate-400">({m.QuanHe})</span></td>
+                            <td className="px-4 py-3">
+                               {m.HinhThucNhan === 'Chuyển khoản' ? (
+                                <div className="flex flex-col">
+                                  <span className="text-blue-600 font-bold flex items-center gap-1"><CreditCard size={10}/> Chuyển khoản</span>
+                                  <span className="text-[9px] text-slate-400 font-mono">{m.NganHang}</span>
+                                </div>
+                              ) : (
+                                <span className="text-emerald-600 font-bold flex items-center gap-1"><Banknote size={10}/> Tiền mặt</span>
+                              )}
+                            </td>
                             <td className="px-4 py-3 text-center">
                               {m.NguoiNhanThay ? <span className="text-[10px] text-amber-600 font-bold bg-amber-50 px-2 py-0.5 rounded">{m.NguoiNhanThay}</span> : <span className="text-[10px] text-slate-400">Chính chủ</span>}
                             </td>
@@ -327,7 +403,7 @@ const MedalForm: React.FC<MedalFormProps> = ({
                         ))
                       ) : (
                         <tr>
-                          <td colSpan={5} className="px-4 py-8 text-center text-slate-400 italic">Chưa có hồ sơ nào được thêm vào danh sách</td>
+                          <td colSpan={6} className="px-4 py-8 text-center text-slate-400 italic">Chưa có hồ sơ nào được thêm vào danh sách</td>
                         </tr>
                       )}
                     </tbody>

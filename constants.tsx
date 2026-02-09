@@ -1,5 +1,17 @@
 
-import { HouseNumberRecord, Street, Neighborhood, PublicLandRecord, WardBoundary, RelationshipType, GeneralStatus, MeritType, MedalType, PolicyType, SocialProtectionType } from './types';
+import { HouseNumberRecord, Street, Neighborhood, PublicLandRecord, WardBoundary, RelationshipType, GeneralStatus, MeritType, MedalType, PolicyType, SocialProtectionType, Bank } from './types';
+
+export const INITIAL_BANKS: Bank[] = [
+  { id: 'b1', name: 'Ngân hàng TMCP Ngoại thương Việt Nam', shortName: 'Vietcombank', code: 'VCB' },
+  { id: 'b2', name: 'Ngân hàng Công Thương Việt Nam', shortName: 'VietinBank', code: 'CTG' },
+  { id: 'b3', name: 'Ngân hàng Đầu tư và Phát triển Việt Nam', shortName: 'BIDV', code: 'BID' },
+  { id: 'b4', name: 'Ngân hàng Nông nghiệp và Phát triển Nông thôn Việt Nam', shortName: 'Agribank', code: 'VAR' },
+  { id: 'b5', name: 'Ngân hàng TMCP Quân đội', shortName: 'MBBank', code: 'MBB' },
+  { id: 'b6', name: 'Ngân hàng TMCP Kỹ thương Việt Nam', shortName: 'Techcombank', code: 'TCB' },
+  { id: 'b7', name: 'Ngân hàng TMCP Á Châu', shortName: 'ACB', code: 'ACB' },
+  { id: 'b8', name: 'Ngân hàng TMCP Sài Gòn Thương Tín', shortName: 'Sacombank', code: 'STB' },
+  { id: 'b9', name: 'Ngân hàng TMCP Tiên Phong', shortName: 'TPBank', code: 'TPB' }
+];
 
 export const INITIAL_STREETS: Street[] = [
   { id: 'st1', name: 'Lê Lợi', code: 'D001' },

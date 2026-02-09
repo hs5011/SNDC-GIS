@@ -1,7 +1,7 @@
 
 import React, { useState, useMemo } from 'react';
-import { PolicyRecord, HouseNumberRecord, RelationshipType, PolicyType } from '../types';
-import { X, Save, Search, CheckCircle2, Building, Plus, Trash2, ShieldCheck, List, Wallet, Activity, UserCog, Edit, RotateCcw } from 'lucide-react';
+import { PolicyRecord, HouseNumberRecord, RelationshipType, PolicyType, Bank } from '../types';
+import { X, Save, Search, CheckCircle2, Building, Plus, Trash2, ShieldCheck, List, Wallet, Activity, UserCog, Edit, RotateCcw, CreditCard, Banknote } from 'lucide-react';
 
 interface PolicyFormProps {
   initialData?: Partial<PolicyRecord>;
@@ -11,6 +11,7 @@ interface PolicyFormProps {
   houseRecords: HouseNumberRecord[];
   relationshipTypes: RelationshipType[];
   policyTypes: PolicyType[];
+  banks: Bank[];
 }
 
 const PolicyForm: React.FC<PolicyFormProps> = ({ 
@@ -20,7 +21,8 @@ const PolicyForm: React.FC<PolicyFormProps> = ({
   isEditing, 
   houseRecords,
   relationshipTypes,
-  policyTypes
+  policyTypes,
+  banks
 }) => {
   const [selectedHouseId, setSelectedHouseId] = useState<string | undefined>(initialData?.LinkedHouseId);
   const [houseSearch, setHouseSearch] = useState('');
@@ -38,7 +40,11 @@ const PolicyForm: React.FC<PolicyFormProps> = ({
     SoTien: 0,
     TyLeTonThuong: '',
     NguoiNhanThay: '',
-    GhiChu: ''
+    GhiChu: '',
+    HinhThucNhan: 'Tiền mặt',
+    NganHang: '',
+    SoTaiKhoan: '',
+    ChuTaiKhoan: ''
   });
 
   const filteredHouses = useMemo(() => {
@@ -66,6 +72,11 @@ const PolicyForm: React.FC<PolicyFormProps> = ({
   const handleAddToList = () => {
     if (!currentPolicy.HoTen) return alert('Vui lòng nhập họ tên đối tượng chính sách');
     if (!currentPolicy.LoaiDienChinhSach) return alert('Vui lòng chọn loại diện chính sách');
+    if (currentPolicy.HinhThucNhan === 'Chuyển khoản') {
+      if (!currentPolicy.NganHang || !currentPolicy.SoTaiKhoan || !currentPolicy.ChuTaiKhoan) {
+        return alert('Vui lòng nhập đầy đủ thông tin chuyển khoản');
+      }
+    }
     
     if (editingTempIndex !== null) {
       const newList = [...policiesList];
@@ -84,7 +95,11 @@ const PolicyForm: React.FC<PolicyFormProps> = ({
       SoTien: 0,
       TyLeTonThuong: '',
       NguoiNhanThay: '',
-      GhiChu: ''
+      GhiChu: '',
+      HinhThucNhan: 'Tiền mặt',
+      NganHang: '',
+      SoTaiKhoan: '',
+      ChuTaiKhoan: ''
     });
   };
 
@@ -103,7 +118,11 @@ const PolicyForm: React.FC<PolicyFormProps> = ({
       SoTien: 0,
       TyLeTonThuong: '',
       NguoiNhanThay: '',
-      GhiChu: ''
+      GhiChu: '',
+      HinhThucNhan: 'Tiền mặt',
+      NganHang: '',
+      SoTaiKhoan: '',
+      ChuTaiKhoan: ''
     });
   };
 
@@ -126,7 +145,7 @@ const PolicyForm: React.FC<PolicyFormProps> = ({
         <div className="flex items-center justify-between p-6 border-b shrink-0">
           <div>
             <h2 className="text-xl font-bold text-slate-900">{isEditing ? 'Sửa hồ sơ chính sách' : 'Thêm hồ sơ Đối tượng chính sách'}</h2>
-            <p className="text-xs text-slate-500 italic mt-1">Quản lý các diện ưu đãi chính sách liên kết với hộ gia đình</p>
+            <p className="text-xs text-slate-500 italic mt-1">Quản lý diện ưu đãi và phương thức chi trả</p>
           </div>
           <button onClick={onClose} className="p-2 hover:bg-slate-100 rounded-full transition-colors"><X size={24} /></button>
         </div>
@@ -190,7 +209,7 @@ const PolicyForm: React.FC<PolicyFormProps> = ({
               </div>
             ) : (
               <div className="border-2 border-dashed border-slate-200 rounded-xl p-6 text-center bg-slate-50">
-                <p className="text-sm text-slate-400 italic">Vui lòng chọn hồ sơ số nhà để bắt đầu nhập thông tin chính sách</p>
+                <p className="text-sm text-slate-400 italic">Vui lòng chọn hồ sơ số nhà để bắt đầu</p>
               </div>
             )}
           </div>
@@ -198,7 +217,7 @@ const PolicyForm: React.FC<PolicyFormProps> = ({
           {selectedHouseId && (
             <div className="space-y-6 border-t pt-6 animation-fade-in">
               <label className="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                <ShieldCheck size={14} className="text-indigo-600" /> 2. Nhập thông tin Đối tượng chính sách
+                <ShieldCheck size={14} className="text-indigo-600" /> 2. Nhập thông tin Đối tượng chính sách & Thanh toán
               </label>
 
               <div className={`p-6 rounded-2xl border transition-all ${editingTempIndex !== null ? 'bg-orange-50 border-orange-200 ring-2 ring-orange-200' : 'bg-slate-50 border-slate-200'} space-y-4`}>
@@ -210,7 +229,7 @@ const PolicyForm: React.FC<PolicyFormProps> = ({
                 )}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-1">
-                    <label className="text-xs font-bold text-slate-600">Họ và tên đối tượng chính sách <span className="text-red-500">*</span></label>
+                    <label className="text-xs font-bold text-slate-600">Họ và tên đối tượng <span className="text-red-500">*</span></label>
                     <input 
                       value={currentPolicy.HoTen || ''} 
                       onChange={e => setCurrentPolicy({...currentPolicy, HoTen: e.target.value})} 
@@ -250,13 +269,13 @@ const PolicyForm: React.FC<PolicyFormProps> = ({
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-xs font-bold text-slate-600 flex items-center gap-1"><Activity size={12}/> Tỷ lệ tổn thương cơ thể</label>
+                    <label className="text-xs font-bold text-slate-600 flex items-center gap-1"><Activity size={12}/> Tỷ lệ tổn thương</label>
                     <input 
                       type="text"
                       value={currentPolicy.TyLeTonThuong || ''} 
                       onChange={e => setCurrentPolicy({...currentPolicy, TyLeTonThuong: e.target.value})} 
                       className="w-full px-3 py-2 border rounded-lg outline-none focus:ring-2 focus:ring-indigo-500 text-sm font-bold text-red-600" 
-                      placeholder="VD: 81% đặc biệt nặng..."
+                      placeholder="VD: 81%..."
                     />
                   </div>
                   <div className="space-y-1">
@@ -275,17 +294,63 @@ const PolicyForm: React.FC<PolicyFormProps> = ({
                       onChange={e => setCurrentPolicy({...currentPolicy, NguoiNhanThay: e.target.value})} 
                       className="w-full px-3 py-2 border rounded-lg outline-none focus:ring-2 focus:ring-indigo-500 text-sm font-semibold text-blue-700 bg-blue-50"
                     >
-                      <option value="">-- Chính chủ (không nhận thay) --</option>
+                      <option value="">-- Chính chủ --</option>
                       {availableReceivers.map(rec => <option key={rec.id} value={rec.name}>{rec.name}</option>)}
                     </select>
                   </div>
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-slate-600 flex items-center gap-1"><Banknote size={12}/> Hình thức nhận tiền</label>
+                    <select 
+                      value={currentPolicy.HinhThucNhan || 'Tiền mặt'} 
+                      onChange={e => setCurrentPolicy({...currentPolicy, HinhThucNhan: e.target.value as any})} 
+                      className="w-full px-3 py-2 border rounded-lg outline-none focus:ring-2 focus:ring-blue-500 text-sm font-bold text-emerald-700"
+                    >
+                      <option value="Tiền mặt">Tiền mặt</option>
+                      <option value="Chuyển khoản">Chuyển khoản</option>
+                    </select>
+                  </div>
+
+                  {currentPolicy.HinhThucNhan === 'Chuyển khoản' && (
+                    <div className="col-span-full grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-white border border-blue-100 rounded-xl animation-slide-down">
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-black text-slate-400 uppercase">Ngân hàng</label>
+                        <select 
+                          value={currentPolicy.NganHang || ''} 
+                          onChange={e => setCurrentPolicy({...currentPolicy, NganHang: e.target.value})}
+                          className="w-full px-3 py-2 border rounded-lg outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                        >
+                          <option value="">-- Chọn ngân hàng --</option>
+                          {banks.map(bank => <option key={bank.id} value={bank.shortName}>{bank.shortName} - {bank.name}</option>)}
+                        </select>
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-black text-slate-400 uppercase">Số tài khoản</label>
+                        <input 
+                          value={currentPolicy.SoTaiKhoan || ''} 
+                          onChange={e => setCurrentPolicy({...currentPolicy, SoTaiKhoan: e.target.value})}
+                          className="w-full px-3 py-2 border rounded-lg outline-none focus:ring-2 focus:ring-blue-500 text-sm font-mono"
+                          placeholder="Nhập số tài khoản..."
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-black text-slate-400 uppercase">Tên chủ tài khoản</label>
+                        <input 
+                          value={currentPolicy.ChuTaiKhoan || ''} 
+                          onChange={e => setCurrentPolicy({...currentPolicy, ChuTaiKhoan: e.target.value.toUpperCase()})}
+                          className="w-full px-3 py-2 border rounded-lg outline-none focus:ring-2 focus:ring-blue-500 text-sm font-bold uppercase"
+                          placeholder="NGUYEN VAN A"
+                        />
+                      </div>
+                    </div>
+                  )}
+
                   <div className="col-span-full space-y-1">
                     <label className="text-xs font-bold text-slate-600">Ghi chú</label>
                     <textarea 
                       value={currentPolicy.GhiChu || ''} 
                       onChange={e => setCurrentPolicy({...currentPolicy, GhiChu: e.target.value})} 
                       className="w-full px-3 py-2 border rounded-lg outline-none focus:ring-2 focus:ring-indigo-500 text-sm h-20 resize-none" 
-                      placeholder="Nhập ghi chú thêm..." 
+                      placeholder="Ghi chú thêm..." 
                     />
                   </div>
                 </div>
@@ -311,7 +376,7 @@ const PolicyForm: React.FC<PolicyFormProps> = ({
                       <tr className="text-[10px] font-bold uppercase text-slate-400">
                         <th className="px-4 py-3 text-center w-12">STT</th>
                         <th className="px-4 py-3">Đối tượng</th>
-                        <th className="px-4 py-3">Diện chính sách</th>
+                        <th className="px-4 py-3">Thanh toán</th>
                         <th className="px-4 py-3 text-center">Người nhận thay</th>
                         <th className="px-4 py-3 text-right">Số tiền</th>
                         <th className="px-4 py-3 text-right">Thao tác</th>
@@ -323,7 +388,16 @@ const PolicyForm: React.FC<PolicyFormProps> = ({
                           <tr key={idx} className={`hover:bg-slate-50 group transition-colors ${editingTempIndex === idx ? 'bg-orange-50/50' : ''}`}>
                             <td className="px-4 py-3 text-center font-bold text-slate-400">{idx + 1}</td>
                             <td className="px-4 py-3 font-bold text-slate-700">{p.HoTen} <span className="text-[10px] font-normal text-slate-400">({p.QuanHe})</span></td>
-                            <td className="px-4 py-3 text-indigo-700 font-medium">{p.LoaiDienChinhSach}</td>
+                            <td className="px-4 py-3">
+                               {p.HinhThucNhan === 'Chuyển khoản' ? (
+                                <div className="flex flex-col">
+                                  <span className="text-blue-600 font-bold flex items-center gap-1"><CreditCard size={10}/> Chuyển khoản</span>
+                                  <span className="text-[9px] text-slate-400 font-mono">{p.NganHang}</span>
+                                </div>
+                              ) : (
+                                <span className="text-emerald-600 font-bold flex items-center gap-1"><Banknote size={10}/> Tiền mặt</span>
+                              )}
+                            </td>
                             <td className="px-4 py-3 text-center">
                               {p.NguoiNhanThay ? <span className="text-[10px] text-blue-600 font-bold bg-blue-50 px-2 py-0.5 rounded">{p.NguoiNhanThay}</span> : <span className="text-[10px] text-slate-400">Chính chủ</span>}
                             </td>
