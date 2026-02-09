@@ -29,6 +29,18 @@ export interface MedalType {
   code: string;
 }
 
+export interface PolicyType {
+  id: string;
+  name: string;
+  code: string;
+}
+
+export interface SocialProtectionType {
+  id: string;
+  name: string;
+  code: string;
+}
+
 export interface Neighborhood {
   id: string;
   nameNew: string;
@@ -114,9 +126,38 @@ export interface MeritRecord {
 export interface MedalRecord {
   id: string;
   LinkedHouseId: string;
-  HoTen: string; // Họ và tên người được huân chương
-  QuanHe: string; // Quan hệ với chủ nhà
-  LoaiDoiTuong: string; // Huân chương hạng nhất, nhì...
+  HoTen: string;
+  QuanHe: string;
+  LoaiDoiTuong: string;
+  SoQuanLyHS: string;
+  SoTien: number;
+  GhiChu?: string;
+  Status: 'Active' | 'Inactive';
+  CreatedAt: string;
+  CreatedBy: string;
+}
+
+export interface PolicyRecord {
+  id: string;
+  LinkedHouseId: string;
+  HoTen: string; 
+  QuanHe: string; 
+  LoaiDienChinhSach: string; 
+  SoQuanLyHS: string;
+  SoTien: number;
+  TyLeTonThuong: string;
+  GhiChu?: string;
+  Status: 'Active' | 'Inactive';
+  CreatedAt: string;
+  CreatedBy: string;
+}
+
+export interface SocialProtectionRecord {
+  id: string;
+  LinkedHouseId: string;
+  HoTen: string; // Họ tên đối tượng (Prompt ghi họ tên liệt sỹ nhưng context là BTXH)
+  QuanHe: string;
+  LoaiDien: string; // NKT đặc biệt nặng, người cao tuổi...
   SoQuanLyHS: string;
   SoTien: number;
   GhiChu?: string;

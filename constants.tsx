@@ -1,5 +1,5 @@
 
-import { HouseNumberRecord, Street, Neighborhood, PublicLandRecord, WardBoundary, RelationshipType, GeneralStatus, MeritType, MedalType } from './types';
+import { HouseNumberRecord, Street, Neighborhood, PublicLandRecord, WardBoundary, RelationshipType, GeneralStatus, MeritType, MedalType, PolicyType, SocialProtectionType } from './types';
 
 export const INITIAL_STREETS: Street[] = [
   { id: 'st1', name: 'Lê Lợi', code: 'D001' },
@@ -43,6 +43,22 @@ export const INITIAL_MEDAL_TYPES: MedalType[] = [
   { id: 'md3', name: 'Huân chương kháng chiến hạng Ba', code: 'HCKC_3' },
   { id: 'md4', name: 'Huy chương kháng chiến hạng Nhất', code: 'HYCKC_1' },
   { id: 'md5', name: 'Huy chương kháng chiến hạng Nhì', code: 'HYCKC_2' }
+];
+
+export const INITIAL_POLICY_TYPES: PolicyType[] = [
+  { id: 'pt1', name: 'Anh hùng Lực lượng vũ trang nhân dân', code: 'AHLLVT' },
+  { id: 'pt2', name: 'Cán bộ Tiền khởi nghĩa', code: 'CCCM' },
+  { id: 'pt3', name: 'Người nhiễm Chất độc hóa học', code: 'CDHH' },
+  { id: 'pt4', name: 'Bệnh binh', code: 'BB' },
+  { id: 'pt5', name: 'Thân nhân Liệt sỹ', code: 'TNLS' }
+];
+
+export const INITIAL_SOCIAL_PROTECTION_TYPES: SocialProtectionType[] = [
+  { id: 'spt1', name: 'NKT đặc biệt nặng là trẻ em', code: 'NKT_DBN_TE' },
+  { id: 'spt2', name: 'NKT nặng từ 16-60 tuổi', code: 'NKT_N_16_60' },
+  { id: 'spt3', name: 'Người từ đủ 75 tuổi trở lên', code: 'NCT_75' },
+  { id: 'spt4', name: 'Trẻ em dưới 3 tuổi diện BTXH', code: 'TE_U3' },
+  { id: 'spt5', name: 'Người đơn thân nghèo nuôi con', code: 'DON_THAN_NGHEO' }
 ];
 
 export const INITIAL_WARD_BOUNDARY: WardBoundary = {

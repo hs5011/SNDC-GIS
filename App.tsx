@@ -3,10 +3,10 @@ import React, { useState, useMemo } from 'react';
 import { 
   Search, Plus, Map as MapIcon, List, Filter, 
   Trash2, Edit, CheckCircle, AlertCircle,
-  Home, Database, MapPin, Milestone, Building2, Landmark, Info, Layers, Eye, EyeOff, Globe, Users, ShieldAlert, Heart, Wallet, Award
+  Home, Database, MapPin, Milestone, Building2, Landmark, Info, Layers, Eye, EyeOff, Globe, Users, ShieldAlert, Heart, Wallet, Award, ShieldCheck, Scale, HandHeart
 } from 'lucide-react';
-import { HouseNumberRecord, Street, Neighborhood, PublicLandRecord, WardBoundary, RelationshipType, GeneralRecord, GeneralStatus, MeritRecord, MeritType, MedalRecord, MedalType } from './types';
-import { INITIAL_DATA, INITIAL_STREETS, INITIAL_NEIGHBORHOODS, INITIAL_PUBLIC_LAND, INITIAL_WARD_BOUNDARY, INITIAL_RELATIONSHIPS, INITIAL_GENERAL_STATUS, INITIAL_MERIT_TYPES, INITIAL_MEDAL_TYPES } from './constants';
+import { HouseNumberRecord, Street, Neighborhood, PublicLandRecord, WardBoundary, RelationshipType, GeneralRecord, GeneralStatus, MeritRecord, MeritType, MedalRecord, MedalType, PolicyRecord, PolicyType, SocialProtectionRecord, SocialProtectionType } from './types';
+import { INITIAL_DATA, INITIAL_STREETS, INITIAL_NEIGHBORHOODS, INITIAL_PUBLIC_LAND, INITIAL_WARD_BOUNDARY, INITIAL_RELATIONSHIPS, INITIAL_GENERAL_STATUS, INITIAL_MERIT_TYPES, INITIAL_MEDAL_TYPES, INITIAL_POLICY_TYPES, INITIAL_SOCIAL_PROTECTION_TYPES } from './constants';
 import HouseForm from './components/HouseForm';
 import MapView from './components/MapView';
 import StreetForm from './components/StreetForm';
@@ -20,8 +20,12 @@ import MeritForm from './components/MeritForm';
 import MeritTypeForm from './components/MeritTypeForm';
 import MedalForm from './components/MedalForm';
 import MedalTypeForm from './components/MedalTypeForm';
+import PolicyForm from './components/PolicyForm';
+import PolicyTypeForm from './components/PolicyTypeForm';
+import SocialProtectionForm from './components/SocialProtectionForm';
+import SocialProtectionTypeForm from './components/SocialProtectionTypeForm';
 
-type SidebarTab = 'records' | 'public_land' | 'generals' | 'medals' | 'merits' | 'planning' | 'streets' | 'neighborhoods' | 'ward_boundary' | 'relationships' | 'general_statuses' | 'merit_types' | 'medal_types';
+type SidebarTab = 'records' | 'public_land' | 'generals' | 'medals' | 'merits' | 'policies' | 'social_protections' | 'planning' | 'streets' | 'neighborhoods' | 'ward_boundary' | 'relationships' | 'general_statuses' | 'merit_types' | 'medal_types' | 'policy_types' | 'social_protection_types';
 
 const App: React.FC = () => {
   const [activeSidebarTab, setActiveSidebarTab] = useState<SidebarTab>('records');
@@ -30,12 +34,16 @@ const App: React.FC = () => {
   const [generals, setGenerals] = useState<GeneralRecord[]>([]);
   const [merits, setMerits] = useState<MeritRecord[]>([]);
   const [medals, setMedals] = useState<MedalRecord[]>([]);
+  const [policies, setPolicies] = useState<PolicyRecord[]>([]);
+  const [socialProtections, setSocialProtections] = useState<SocialProtectionRecord[]>([]);
   const [streets, setStreets] = useState<Street[]>(INITIAL_STREETS);
   const [neighborhoods, setNeighborhoods] = useState<Neighborhood[]>(INITIAL_NEIGHBORHOODS);
   const [relationships, setRelationships] = useState<RelationshipType[]>(INITIAL_RELATIONSHIPS);
   const [generalStatuses, setGeneralStatuses] = useState<GeneralStatus[]>(INITIAL_GENERAL_STATUS);
   const [meritTypes, setMeritTypes] = useState<MeritType[]>(INITIAL_MERIT_TYPES);
   const [medalTypes, setMedalTypes] = useState<MedalType[]>(INITIAL_MEDAL_TYPES);
+  const [policyTypes, setPolicyTypes] = useState<PolicyType[]>(INITIAL_POLICY_TYPES);
+  const [socialProtectionTypes, setSocialProtectionTypes] = useState<SocialProtectionType[]>(INITIAL_SOCIAL_PROTECTION_TYPES);
   const [wardBoundary, setWardBoundary] = useState<WardBoundary>(INITIAL_WARD_BOUNDARY);
   
   const [searchTerm, setSearchTerm] = useState('');
@@ -55,6 +63,12 @@ const App: React.FC = () => {
 
   const [isMedalFormOpen, setIsMedalFormOpen] = useState(false);
   const [editingMedal, setEditingMedal] = useState<MedalRecord | undefined>(undefined);
+
+  const [isPolicyFormOpen, setIsPolicyFormOpen] = useState(false);
+  const [editingPolicy, setEditingPolicy] = useState<PolicyRecord | undefined>(undefined);
+
+  const [isSocialFormOpen, setIsSocialFormOpen] = useState(false);
+  const [editingSocial, setEditingSocial] = useState<SocialProtectionRecord | undefined>(undefined);
   
   const [isStreetFormOpen, setIsStreetFormOpen] = useState(false);
   const [editingStreet, setEditingStreet] = useState<Street | undefined>(undefined);
@@ -73,6 +87,12 @@ const App: React.FC = () => {
 
   const [isMdtFormOpen, setIsMdtFormOpen] = useState(false);
   const [editingMdt, setEditingMdt] = useState<MedalType | undefined>(undefined);
+
+  const [isPtFormOpen, setIsPtFormOpen] = useState(false);
+  const [editingPt, setEditingPt] = useState<PolicyType | undefined>(undefined);
+
+  const [isSptFormOpen, setIsSptFormOpen] = useState(false);
+  const [editingSpt, setEditingSpt] = useState<SocialProtectionType | undefined>(undefined);
 
   const [activeFilter, setActiveFilter] = useState<'all' | 'active' | 'inactive'>('active');
 
@@ -159,6 +179,34 @@ const App: React.FC = () => {
       return matchSearch && matchFilter;
     });
   }, [medals, searchTerm, activeFilter]);
+
+  const filteredPolicies = useMemo(() => {
+    return policies.filter(p => {
+      const matchSearch = (
+        (p.HoTen || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (p.SoQuanLyHS || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (p.GhiChu || '').toLowerCase().includes(searchTerm.toLowerCase())
+      );
+      const matchFilter = activeFilter === 'all' ? true : 
+                          activeFilter === 'active' ? p.Status === 'Active' : 
+                          p.Status === 'Inactive';
+      return matchSearch && matchFilter;
+    });
+  }, [policies, searchTerm, activeFilter]);
+
+  const filteredSocials = useMemo(() => {
+    return socialProtections.filter(s => {
+      const matchSearch = (
+        (s.HoTen || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (s.SoQuanLyHS || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (s.GhiChu || '').toLowerCase().includes(searchTerm.toLowerCase())
+      );
+      const matchFilter = activeFilter === 'all' ? true : 
+                          activeFilter === 'active' ? s.Status === 'Active' : 
+                          s.Status === 'Inactive';
+      return matchSearch && matchFilter;
+    });
+  }, [socialProtections, searchTerm, activeFilter]);
 
   // House CRUD
   const handleAddOrEditHouse = (data: Partial<HouseNumberRecord>) => {
@@ -302,6 +350,56 @@ const App: React.FC = () => {
     }
   };
 
+  // Policy CRUD
+  const handleAddOrEditPolicy = (dataList: Partial<PolicyRecord>[]) => {
+    if (editingPolicy) {
+      const data = dataList[0];
+      setPolicies(prev => prev.map(p => p.id === editingPolicy.id ? { ...p, ...data } as PolicyRecord : p));
+    } else {
+      const newRecords = dataList.map(data => ({
+        ...data,
+        id: data.id || Math.random().toString(36).substr(2, 9),
+        CreatedAt: new Date().toISOString(),
+        CreatedBy: 'Admin',
+        Status: 'Active'
+      })) as PolicyRecord[];
+      setPolicies(prev => [...prev, ...newRecords]);
+    }
+    setIsPolicyFormOpen(false);
+    setEditingPolicy(undefined);
+  };
+
+  const handleDeletePolicy = (id: string) => {
+    if (window.confirm('Xác nhận ngưng quản lý hồ sơ chính sách này?')) {
+      setPolicies(prev => prev.map(p => p.id === id ? { ...p, Status: 'Inactive' } as PolicyRecord : p));
+    }
+  };
+
+  // Social CRUD
+  const handleAddOrEditSocial = (dataList: Partial<SocialProtectionRecord>[]) => {
+    if (editingSocial) {
+      const data = dataList[0];
+      setSocialProtections(prev => prev.map(s => s.id === editingSocial.id ? { ...s, ...data } as SocialProtectionRecord : s));
+    } else {
+      const newRecords = dataList.map(data => ({
+        ...data,
+        id: data.id || Math.random().toString(36).substr(2, 9),
+        CreatedAt: new Date().toISOString(),
+        CreatedBy: 'Admin',
+        Status: 'Active'
+      })) as SocialProtectionRecord[];
+      setSocialProtections(prev => [...prev, ...newRecords]);
+    }
+    setIsSocialFormOpen(false);
+    setEditingSocial(undefined);
+  };
+
+  const handleDeleteSocial = (id: string) => {
+    if (window.confirm('Xác nhận ngưng quản lý hồ sơ bảo trợ này?')) {
+      setSocialProtections(prev => prev.map(s => s.id === id ? { ...s, Status: 'Inactive' } as SocialProtectionRecord : s));
+    }
+  };
+
   const handleAddOrEditStreet = (data: Partial<Street>) => {
     if (editingStreet) {
       setStreets(prev => prev.map(s => s.id === editingStreet.id ? { ...s, ...data } as Street : s));
@@ -382,6 +480,38 @@ const App: React.FC = () => {
     }
   };
 
+  const handleAddOrEditPt = (data: Partial<PolicyType>) => {
+    if (editingPt) {
+      setPolicyTypes(prev => prev.map(p => p.id === editingPt.id ? { ...p, ...data } as PolicyType : p));
+    } else {
+      setPolicyTypes(prev => [...prev, { ...data, id: Math.random().toString(36).substr(2, 9) } as PolicyType]);
+    }
+    setIsPtFormOpen(false);
+    setEditingPt(undefined);
+  };
+
+  const handleDeletePt = (id: string) => {
+    if (window.confirm('Xác nhận xóa loại diện chính sách này?')) {
+      setPolicyTypes(prev => prev.filter(p => p.id !== id));
+    }
+  };
+
+  const handleAddOrEditSpt = (data: Partial<SocialProtectionType>) => {
+    if (editingSpt) {
+      setSocialProtectionTypes(prev => prev.map(p => p.id === editingSpt.id ? { ...p, ...data } as SocialProtectionType : p));
+    } else {
+      setSocialProtectionTypes(prev => [...prev, { ...data, id: Math.random().toString(36).substr(2, 9) } as SocialProtectionType]);
+    }
+    setIsSptFormOpen(false);
+    setEditingSpt(undefined);
+  };
+
+  const handleDeleteSpt = (id: string) => {
+    if (window.confirm('Xác nhận xóa loại diện bảo trợ này?')) {
+      setSocialProtectionTypes(prev => prev.filter(p => p.id !== id));
+    }
+  };
+
   const handleAddOrEditNb = (data: Partial<Neighborhood>) => {
     if (editingNb) {
       setNeighborhoods(prev => prev.map(n => n.id === editingNb.id ? { ...n, ...data } as Neighborhood : n));
@@ -435,6 +565,18 @@ const App: React.FC = () => {
             <Plus size={18} /> Thêm Huân chương KC
           </button>
         );
+      case 'policies':
+        return (
+          <button onClick={() => { setEditingPolicy(undefined); setIsPolicyFormOpen(true); }} className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl font-semibold shadow-md transition-all">
+            <Plus size={18} /> Thêm Hồ sơ chính sách
+          </button>
+        );
+      case 'social_protections':
+        return (
+          <button onClick={() => { setEditingSocial(undefined); setIsSocialFormOpen(true); }} className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl font-semibold shadow-md transition-all">
+            <Plus size={18} /> Thêm hồ sơ bảo trợ
+          </button>
+        );
       case 'streets':
         return (
           <button onClick={() => { setEditingStreet(undefined); setIsStreetFormOpen(true); }} className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl font-semibold shadow-md transition-all">
@@ -469,6 +611,18 @@ const App: React.FC = () => {
         return (
           <button onClick={() => { setEditingMdt(undefined); setIsMdtFormOpen(true); }} className="flex items-center gap-2 bg-amber-800 hover:bg-amber-900 text-white px-4 py-2 rounded-xl font-semibold shadow-md transition-all">
             <Plus size={18} /> Thêm loại huân chương
+          </button>
+        );
+      case 'policy_types':
+        return (
+          <button onClick={() => { setEditingPt(undefined); setIsPtFormOpen(true); }} className="flex items-center gap-2 bg-indigo-800 hover:bg-indigo-900 text-white px-4 py-2 rounded-xl font-semibold shadow-md transition-all">
+            <Plus size={18} /> Thêm loại diện CS
+          </button>
+        );
+      case 'social_protection_types':
+        return (
+          <button onClick={() => { setEditingSpt(undefined); setIsSptFormOpen(true); }} className="flex items-center gap-2 bg-emerald-800 hover:bg-emerald-900 text-white px-4 py-2 rounded-xl font-semibold shadow-md transition-all">
+            <Plus size={18} /> Thêm loại diện BT
           </button>
         );
       default:
@@ -754,7 +908,7 @@ const App: React.FC = () => {
                 <table className="w-full text-left border-collapse min-w-[800px]">
                   <thead className="sticky top-0 bg-white shadow-sm z-10">
                     <tr className="text-slate-400 text-[10px] font-bold uppercase tracking-widest border-b">
-                      <th className="px-6 py-4">Họ tên người được huân chương</th>
+                      <th className="px-6 py-4">Họ tên người nhận</th>
                       <th className="px-6 py-4">Quan hệ với chủ nhà</th>
                       <th className="px-6 py-4">Loại huân chương</th>
                       <th className="px-6 py-4">Số hồ sơ</th>
@@ -791,6 +945,123 @@ const App: React.FC = () => {
             </div>
           </div>
         );
+      case 'policies':
+        return (
+          <div className="flex-1 flex flex-col overflow-hidden p-6 gap-6">
+            <section className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 shrink-0">
+              <StatsCard label="Hồ sơ Chính sách" value={policies.length.toString()} icon={<ShieldCheck className="text-indigo-600" />} />
+              <StatsCard label="Đang hưởng trợ cấp" value={policies.filter(p => p.Status === 'Active').length.toString()} icon={<CheckCircle className="text-emerald-600" />} />
+              <StatsCard label="Tổng kinh phí trợ cấp" value={policies.reduce((a, b) => a + (b.SoTien || 0), 0).toLocaleString() + ' VNĐ'} icon={<Wallet className="text-blue-600" />} />
+              <StatsCard label="Đã ngưng" value={policies.filter(p => p.Status === 'Inactive').length.toString()} icon={<Trash2 className="text-slate-500" />} />
+            </section>
+            <div className="flex-1 bg-white rounded-2xl shadow-sm border border-slate-200 flex flex-col overflow-hidden">
+              <div className="p-4 border-b flex items-center justify-between bg-slate-50 shrink-0">
+                <div className="flex border rounded-lg overflow-hidden bg-white shadow-sm">
+                  <FilterButton active={activeFilter === 'active'} onClick={() => setActiveFilter('active')} label="Đang quản lý" />
+                  <FilterButton active={activeFilter === 'inactive'} onClick={() => setActiveFilter('inactive')} label="Đã ngưng" />
+                  <FilterButton active={activeFilter === 'all'} onClick={() => setActiveFilter('all')} label="Tất cả" />
+                </div>
+              </div>
+              <div className="flex-1 overflow-auto custom-scrollbar relative">
+                <table className="w-full text-left border-collapse min-w-[800px]">
+                  <thead className="sticky top-0 bg-white shadow-sm z-10">
+                    <tr className="text-slate-400 text-[10px] font-bold uppercase tracking-widest border-b">
+                      <th className="px-6 py-4">Đối tượng chính sách</th>
+                      <th className="px-6 py-4">Diện chính sách</th>
+                      <th className="px-6 py-4 text-center">Tỷ lệ thương tật</th>
+                      <th className="px-6 py-4 text-right">Số hồ sơ / Tiền trợ cấp</th>
+                      <th className="px-6 py-4 text-right">Thao tác</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {filteredPolicies.map(policy => (
+                      <tr key={policy.id} className="hover:bg-indigo-50/30 transition-colors group">
+                        <td className="px-6 py-4">
+                          <p className="text-sm font-bold text-slate-800">{policy.HoTen}</p>
+                          <p className="text-[10px] text-slate-400">Quan hệ: {policy.QuanHe || '--'}</p>
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className="text-xs font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-100">{policy.LoaiDienChinhSach}</span>
+                        </td>
+                        <td className="px-6 py-4 text-center">
+                          <span className="text-sm font-black text-red-600">{policy.TyLeTonThuong || '--'}</span>
+                        </td>
+                        <td className="px-6 py-4 text-right">
+                          <p className="text-xs font-mono text-slate-500">{policy.SoQuanLyHS}</p>
+                          <p className="text-sm font-black text-emerald-600">{(policy.SoTien || 0).toLocaleString()} VNĐ</p>
+                        </td>
+                        <td className="px-6 py-4 text-right">
+                          <div className="flex items-center justify-end gap-2">
+                            <button onClick={() => { setEditingPolicy(policy); setIsPolicyFormOpen(true); }} className="p-1.5 hover:bg-indigo-600 hover:text-white text-indigo-600 rounded-lg transition-colors"><Edit size={14} /></button>
+                            {policy.Status === 'Active' && <button onClick={() => handleDeletePolicy(policy.id)} className="p-1.5 hover:bg-red-600 hover:text-white text-red-600 rounded-lg transition-colors"><Trash2 size={14} /></button>}
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        );
+      case 'social_protections':
+        return (
+          <div className="flex-1 flex flex-col overflow-hidden p-6 gap-6">
+            <section className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 shrink-0">
+              <StatsCard label="Hồ sơ Bảo trợ XH" value={socialProtections.length.toString()} icon={<HandHeart className="text-emerald-600" />} />
+              <StatsCard label="Đang hưởng trợ cấp" value={socialProtections.filter(s => s.Status === 'Active').length.toString()} icon={<CheckCircle className="text-emerald-600" />} />
+              <StatsCard label="Tổng kinh phí trợ cấp" value={socialProtections.reduce((a, b) => a + (b.SoTien || 0), 0).toLocaleString() + ' VNĐ'} icon={<Wallet className="text-blue-600" />} />
+              <StatsCard label="Đã ngưng" value={socialProtections.filter(s => s.Status === 'Inactive').length.toString()} icon={<Trash2 className="text-slate-500" />} />
+            </section>
+            <div className="flex-1 bg-white rounded-2xl shadow-sm border border-slate-200 flex flex-col overflow-hidden">
+              <div className="p-4 border-b flex items-center justify-between bg-slate-50 shrink-0">
+                <div className="flex border rounded-lg overflow-hidden bg-white shadow-sm">
+                  <FilterButton active={activeFilter === 'active'} onClick={() => setActiveFilter('active')} label="Đang quản lý" />
+                  <FilterButton active={activeFilter === 'inactive'} onClick={() => setActiveFilter('inactive')} label="Đã ngưng" />
+                  <FilterButton active={activeFilter === 'all'} onClick={() => setActiveFilter('all')} label="Tất cả" />
+                </div>
+              </div>
+              <div className="flex-1 overflow-auto custom-scrollbar relative">
+                <table className="w-full text-left border-collapse min-w-[800px]">
+                  <thead className="sticky top-0 bg-white shadow-sm z-10">
+                    <tr className="text-slate-400 text-[10px] font-bold uppercase tracking-widest border-b">
+                      <th className="px-6 py-4">Đối tượng hưởng BTXH</th>
+                      <th className="px-6 py-4">Diện bảo trợ</th>
+                      <th className="px-6 py-4">Quan hệ với chủ nhà</th>
+                      <th className="px-6 py-4">Số hồ sơ</th>
+                      <th className="px-6 py-4 text-right">Mức trợ cấp</th>
+                      <th className="px-6 py-4 text-right">Thao tác</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {filteredSocials.map(social => (
+                      <tr key={social.id} className="hover:bg-emerald-50/30 transition-colors group">
+                        <td className="px-6 py-4">
+                          <p className="text-sm font-bold text-slate-800">{social.HoTen}</p>
+                          <p className="text-[10px] text-slate-400 italic">{social.GhiChu || '--'}</p>
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100">{social.LoaiDien}</span>
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className="text-xs font-medium text-slate-600 bg-slate-100 px-2 py-0.5 rounded-full">{social.QuanHe}</span>
+                        </td>
+                        <td className="px-6 py-4 text-xs font-mono text-slate-500">{social.SoQuanLyHS}</td>
+                        <td className="px-6 py-4 text-right font-black text-emerald-600">{(social.SoTien || 0).toLocaleString()} VNĐ</td>
+                        <td className="px-6 py-4 text-right">
+                          <div className="flex items-center justify-end gap-2">
+                            <button onClick={() => { setEditingSocial(social); setIsSocialFormOpen(true); }} className="p-1.5 hover:bg-emerald-600 hover:text-white text-emerald-600 rounded-lg transition-colors"><Edit size={14} /></button>
+                            {social.Status === 'Active' && <button onClick={() => handleDeleteSocial(social.id)} className="p-1.5 hover:bg-red-600 hover:text-white text-red-600 rounded-lg transition-colors"><Trash2 size={14} /></button>}
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        );
       case 'streets':
         return (
           <div className="flex-1 p-6 flex flex-col gap-6">
@@ -816,48 +1087,23 @@ const App: React.FC = () => {
             </div>
           </div>
         );
-      case 'merit_types':
+      case 'social_protection_types':
         return (
           <div className="flex-1 p-6 flex flex-col gap-6">
-            <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2"><Heart className="text-rose-600" /> Quản lý danh mục Loại đối tượng NCC</h2>
+            <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2"><HandHeart className="text-emerald-600" /> Quản lý danh mục Loại diện bảo trợ</h2>
             <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
               <table className="w-full text-left">
                 <thead className="bg-slate-50 border-b">
-                  <tr className="text-[10px] font-bold uppercase text-slate-400"><th className="px-6 py-4">Mã loại</th><th className="px-6 py-4">Tên loại đối tượng</th><th className="px-6 py-4 text-right">Thao tác</th></tr>
+                  <tr className="text-[10px] font-bold uppercase text-slate-400"><th className="px-6 py-4">Mã diện</th><th className="px-6 py-4">Tên diện bảo trợ xã hội</th><th className="px-6 py-4 text-right">Thao tác</th></tr>
                 </thead>
                 <tbody className="divide-y">
-                  {meritTypes.map(mt => (
-                    <tr key={mt.id} className="hover:bg-slate-50">
-                      <td className="px-6 py-4 font-mono text-xs text-rose-600">{mt.code}</td>
-                      <td className="px-6 py-4 text-sm font-semibold text-slate-700">{mt.name}</td>
+                  {socialProtectionTypes.map(spt => (
+                    <tr key={spt.id} className="hover:bg-emerald-50">
+                      <td className="px-6 py-4 font-mono text-xs text-emerald-600">{spt.code}</td>
+                      <td className="px-6 py-4 text-sm font-semibold text-slate-700">{spt.name}</td>
                       <td className="px-6 py-4 text-right">
-                        <button onClick={() => { setEditingMt(mt); setIsMtFormOpen(true); }} className="p-1.5 hover:bg-rose-100 text-rose-600 rounded-lg"><Edit size={14} /></button>
-                        <button onClick={() => handleDeleteMt(mt.id)} className="p-1.5 hover:bg-red-100 text-red-600 rounded-lg ml-2"><Trash2 size={14} /></button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        );
-      case 'medal_types':
-        return (
-          <div className="flex-1 p-6 flex flex-col gap-6">
-            <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2"><Award className="text-amber-600" /> Quản lý danh mục Loại huân chương kháng chiến</h2>
-            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-              <table className="w-full text-left">
-                <thead className="bg-slate-50 border-b">
-                  <tr className="text-[10px] font-bold uppercase text-slate-400"><th className="px-6 py-4">Mã loại</th><th className="px-6 py-4">Tên loại huân chương/huy chương</th><th className="px-6 py-4 text-right">Thao tác</th></tr>
-                </thead>
-                <tbody className="divide-y">
-                  {medalTypes.map(mt => (
-                    <tr key={mt.id} className="hover:bg-slate-50">
-                      <td className="px-6 py-4 font-mono text-xs text-amber-600">{mt.code}</td>
-                      <td className="px-6 py-4 text-sm font-semibold text-slate-700">{mt.name}</td>
-                      <td className="px-6 py-4 text-right">
-                        <button onClick={() => { setEditingMdt(mt); setIsMdtFormOpen(true); }} className="p-1.5 hover:bg-amber-100 text-amber-600 rounded-lg"><Edit size={14} /></button>
-                        <button onClick={() => handleDeleteMdt(mt.id)} className="p-1.5 hover:bg-red-100 text-red-600 rounded-lg ml-2"><Trash2 size={14} /></button>
+                        <button onClick={() => { setEditingSpt(spt); setIsSptFormOpen(true); }} className="p-1.5 hover:bg-emerald-100 text-emerald-600 rounded-lg"><Edit size={14} /></button>
+                        <button onClick={() => handleDeleteSpt(spt.id)} className="p-1.5 hover:bg-red-100 text-red-600 rounded-lg ml-2"><Trash2 size={14} /></button>
                       </td>
                     </tr>
                   ))}
@@ -883,31 +1129,6 @@ const App: React.FC = () => {
                       <td className="px-6 py-4 text-right">
                         <button onClick={() => { setEditingRel(rel); setIsRelFormOpen(true); }} className="p-1.5 hover:bg-pink-100 text-pink-600 rounded-lg"><Edit size={14} /></button>
                         <button onClick={() => handleDeleteRel(rel.id)} className="p-1.5 hover:bg-red-100 text-red-600 rounded-lg ml-2"><Trash2 size={14} /></button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        );
-      case 'general_statuses':
-        return (
-          <div className="flex-1 p-6 flex flex-col gap-6">
-            <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2"><Info className="text-slate-600" /> Quản lý danh mục Tình trạng tướng lĩnh</h2>
-            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-              <table className="w-full text-left">
-                <thead className="bg-slate-50 border-b">
-                  <tr className="text-[10px] font-bold uppercase text-slate-400"><th className="px-6 py-4">Mã tình trạng</th><th className="px-6 py-4">Tên tình trạng</th><th className="px-6 py-4 text-right">Thao tác</th></tr>
-                </thead>
-                <tbody className="divide-y">
-                  {generalStatuses.map(gs => (
-                    <tr key={gs.id} className="hover:bg-slate-50">
-                      <td className="px-6 py-4 font-mono text-xs text-slate-600">{gs.code}</td>
-                      <td className="px-6 py-4 text-sm font-semibold text-slate-700">{gs.name}</td>
-                      <td className="px-6 py-4 text-right">
-                        <button onClick={() => { setEditingGs(gs); setIsGsFormOpen(true); }} className="p-1.5 hover:bg-slate-100 text-slate-600 rounded-lg"><Edit size={14} /></button>
-                        <button onClick={() => handleDeleteGs(gs.id)} className="p-1.5 hover:bg-red-100 text-red-600 rounded-lg ml-2"><Trash2 size={14} /></button>
                       </td>
                     </tr>
                   ))}
@@ -1078,13 +1299,18 @@ const App: React.FC = () => {
           <NavItem icon={<ShieldAlert size={18} />} label="Quản lý Tướng lĩnh" active={activeSidebarTab === 'generals'} onClick={() => setActiveSidebarTab('generals')} />
           <NavItem icon={<Heart size={18} />} label="Người có công" active={activeSidebarTab === 'merits'} onClick={() => setActiveSidebarTab('merits')} />
           <NavItem icon={<Award size={18} />} label="Huân chương KC" active={activeSidebarTab === 'medals'} onClick={() => setActiveSidebarTab('medals')} />
+          <NavItem icon={<ShieldCheck size={18} />} label="Đối tượng chính sách" active={activeSidebarTab === 'policies'} onClick={() => setActiveSidebarTab('policies')} />
+          <NavItem icon={<HandHeart size={18} />} label="Đối tượng bảo trợ" active={activeSidebarTab === 'social_protections'} onClick={() => setActiveSidebarTab('social_protections')} />
           <NavItem icon={<MapIcon size={18} />} label="Bản đồ" active={activeSidebarTab === 'planning'} onClick={() => setActiveSidebarTab('planning')} />
+          
           <div className="pt-4 pb-2 px-4 text-[10px] font-black text-slate-500 uppercase tracking-widest">Danh mục hệ thống</div>
           <NavItem icon={<Globe size={18} />} label="Ranh giới Phường" active={activeSidebarTab === 'ward_boundary'} onClick={() => setActiveSidebarTab('ward_boundary')} />
           <NavItem icon={<Milestone size={18} />} label="Danh mục Đường" active={activeSidebarTab === 'streets'} onClick={() => setActiveSidebarTab('streets')} />
           <NavItem icon={<Building2 size={18} />} label="Danh mục Khu phố" active={activeSidebarTab === 'neighborhoods'} onClick={() => setActiveSidebarTab('neighborhoods')} />
           <NavItem icon={<Heart size={18} className="text-rose-400" />} label="Loại đối tượng NCC" active={activeSidebarTab === 'merit_types'} onClick={() => setActiveSidebarTab('merit_types')} />
           <NavItem icon={<Award size={18} className="text-amber-400" />} label="Loại huân chương" active={activeSidebarTab === 'medal_types'} onClick={() => setActiveSidebarTab('medal_types')} />
+          <NavItem icon={<Scale size={18} className="text-indigo-400" />} label="Loại diện chính sách" active={activeSidebarTab === 'policy_types'} onClick={() => setActiveSidebarTab('policy_types')} />
+          <NavItem icon={<HandHeart size={18} className="text-emerald-400" />} label="Loại diện bảo trợ" active={activeSidebarTab === 'social_protection_types'} onClick={() => setActiveSidebarTab('social_protection_types')} />
           <NavItem icon={<Users size={18} />} label="Quan hệ chủ hộ" active={activeSidebarTab === 'relationships'} onClick={() => setActiveSidebarTab('relationships')} />
           <NavItem icon={<Info size={18} />} label="Tình trạng tướng lĩnh" active={activeSidebarTab === 'general_statuses'} onClick={() => setActiveSidebarTab('general_statuses')} />
         </nav>
@@ -1151,6 +1377,28 @@ const App: React.FC = () => {
           medalTypes={medalTypes}
         />
       )}
+      {isPolicyFormOpen && (
+        <PolicyForm 
+          onClose={() => { setIsPolicyFormOpen(false); setEditingPolicy(undefined); }} 
+          onSubmit={handleAddOrEditPolicy} 
+          initialData={editingPolicy} 
+          isEditing={!!editingPolicy} 
+          houseRecords={records}
+          relationshipTypes={relationships}
+          policyTypes={policyTypes}
+        />
+      )}
+      {isSocialFormOpen && (
+        <SocialProtectionForm 
+          onClose={() => { setIsSocialFormOpen(false); setEditingSocial(undefined); }} 
+          onSubmit={handleAddOrEditSocial} 
+          initialData={editingSocial} 
+          isEditing={!!editingSocial} 
+          houseRecords={records}
+          relationshipTypes={relationships}
+          protectionTypes={socialProtectionTypes}
+        />
+      )}
       {isStreetFormOpen && (
         <StreetForm initialData={editingStreet} onClose={() => { setIsStreetFormOpen(false); setEditingStreet(undefined); }} onSubmit={handleAddOrEditStreet} />
       )}
@@ -1168,6 +1416,12 @@ const App: React.FC = () => {
       )}
       {isMdtFormOpen && (
         <MedalTypeForm initialData={editingMdt} onClose={() => { setIsMdtFormOpen(false); setEditingMdt(undefined); }} onSubmit={handleAddOrEditMdt} />
+      )}
+      {isPtFormOpen && (
+        <PolicyTypeForm initialData={editingPt} onClose={() => { setIsPtFormOpen(false); setEditingPt(undefined); }} onSubmit={handleAddOrEditPt} />
+      )}
+      {isSptFormOpen && (
+        <SocialProtectionTypeForm initialData={editingSpt} onClose={() => { setIsSptFormOpen(false); setEditingSpt(undefined); }} onSubmit={handleAddOrEditSpt} />
       )}
     </div>
   );
