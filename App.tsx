@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo, useEffect } from 'react';
 import { 
   Search, Plus, Map as MapIcon, List, Filter, 
@@ -116,7 +117,10 @@ const App: React.FC = () => {
   const getHouseAddress = (houseId?: string) => {
     if (!houseId) return '';
     const house = records.find(h => h.id === houseId);
-    return house ? `${house.SoNha} ${house.Duong}` : '';
+    if (!house) return '';
+    const sn = house.SoNha ? `${house.SoNha} ` : '';
+    const d = house.Duong || '';
+    return (sn + d).trim();
   };
 
   const [mapLayers, setMapLayers] = useState({
@@ -260,31 +264,31 @@ const App: React.FC = () => {
 
     switch(tab) {
       case 'records':
-        dataToExport = filteredRecords.map(r => [r.MaSoHS, r.TenChuHo, r.SoCCCD, r.SoNha, r.Duong, r.KDC, r.SoTo, r.SoThua, r.TranhChap ? 'Có' : 'Không', r.Status]);
+        dataToExport = filteredRecords.map(r => [r.MaSoHS || '', r.TenChuHo || '', r.SoCCCD || '', r.SoNha || '', r.Duong || '', r.KDC || '', r.SoTo || '', r.SoThua || '', r.TranhChap ? 'Có' : 'Không', r.Status]);
         headers = ['Mã HS', 'Chủ hộ', 'CCCD', 'Số nhà', 'Đường', 'Khu phố', 'Số tờ', 'Số thửa', 'Tranh chấp', 'Trạng thái'];
         break;
       case 'public_land':
-        dataToExport = filteredPublicLand.map(l => [l.Bieu, getHouseAddress(l.LinkedHouseId), l.Donviquanl, l.Donvisudun, l.To, l.Thua, l.Phuong, l.Dientich, l.Hientrang, l.Status]);
+        dataToExport = filteredPublicLand.map(l => [l.Bieu || '', getHouseAddress(l.LinkedHouseId), l.Donviquanl || '', l.Donvisudun || '', l.To || '', l.Thua || '', l.Phuong || '', l.Dientich || 0, l.Hientrang || '', l.Status]);
         headers = ['Biểu', 'Địa chỉ liên kết', 'Đơn vị QL', 'Đơn vị sử dụng', 'Tờ', 'Thửa', 'Phường', 'Diện tích', 'Hiện trạng', 'Trạng thái'];
         break;
       case 'generals':
-        dataToExport = filteredGenerals.map(g => [g.HoTen, getHouseAddress(g.LinkedHouseId), g.QuanHe, g.Dien, g.TinhTrang, g.NguoiNhanThay, g.HinhThucNhan, g.NganHang, g.SoTaiKhoan]);
+        dataToExport = filteredGenerals.map(g => [g.HoTen || '', getHouseAddress(g.LinkedHouseId), g.QuanHe || '', g.Dien || '', g.TinhTrang || '', g.NguoiNhanThay || '', g.HinhThucNhan || '', g.NganHang || '', g.SoTaiKhoan || '']);
         headers = ['Họ tên', 'Địa chỉ số nhà', 'Quan hệ chủ hộ', 'Diện', 'Tình trạng', 'Người nhận thay', 'Hình thức nhận', 'Ngân hàng', 'Số tài khoản'];
         break;
       case 'merits':
-        dataToExport = filteredMerits.map(m => [m.HoTen, getHouseAddress(m.LinkedHouseId), m.QuanHe, m.LoaiDoiTuong, m.SoQuanLyHS, m.SoTien, m.NguoiNhanThay, m.HinhThucNhan]);
+        dataToExport = filteredMerits.map(m => [m.HoTen || '', getHouseAddress(m.LinkedHouseId), m.QuanHe || '', m.LoaiDoiTuong || '', m.SoQuanLyHS || '', m.SoTien || 0, m.NguoiNhanThay || '', m.HinhThucNhan || '']);
         headers = ['Họ tên', 'Địa chỉ số nhà', 'Quan hệ', 'Loại đối tượng', 'Số hồ sơ', 'Số tiền', 'Người nhận thay', 'Hình thức nhận'];
         break;
       case 'medals':
-        dataToExport = filteredMedals.map(m => [m.HoTen, getHouseAddress(m.LinkedHouseId), m.QuanHe, m.LoaiDoiTuong, m.SoQuanLyHS, m.SoTien, m.NguoiNhanThay]);
+        dataToExport = filteredMedals.map(m => [m.HoTen || '', getHouseAddress(m.LinkedHouseId), m.QuanHe || '', m.LoaiDoiTuong || '', m.SoQuanLyHS || '', m.SoTien || 0, m.NguoiNhanThay || '']);
         headers = ['Họ tên', 'Địa chỉ số nhà', 'Quan hệ', 'Loại huân chương', 'Số hồ sơ', 'Số tiền', 'Người nhận thay'];
         break;
       case 'policies':
-        dataToExport = filteredPolicies.map(p => [p.HoTen, getHouseAddress(p.LinkedHouseId), p.QuanHe, p.LoaiDienChinhSach, p.SoQuanLyHS, p.SoTien, p.TyLeTonThuong]);
+        dataToExport = filteredPolicies.map(p => [p.HoTen || '', getHouseAddress(p.LinkedHouseId), p.QuanHe || '', p.LoaiDienChinhSach || '', p.SoQuanLyHS || '', p.SoTien || 0, p.TyLeTonThuong || '']);
         headers = ['Họ tên', 'Địa chỉ số nhà', 'Quan hệ', 'Diện CS', 'Số hồ sơ', 'Số tiền', 'Tỷ lệ tổn thương'];
         break;
       case 'social_protections':
-        dataToExport = filteredSocials.map(s => [s.HoTen, getHouseAddress(s.LinkedHouseId), s.QuanHe, s.LoaiDien, s.SoQuanLyHS, s.SoTien, s.HinhThucNhan]);
+        dataToExport = filteredSocials.map(s => [s.HoTen || '', getHouseAddress(s.LinkedHouseId), s.QuanHe || '', s.LoaiDien || '', s.SoQuanLyHS || '', s.SoTien || 0, s.HinhThucNhan || '']);
         headers = ['Họ tên', 'Địa chỉ số nhà', 'Quan hệ', 'Diện bảo trợ', 'Số hồ sơ', 'Số tiền', 'Hình thức nhận'];
         break;
       default: return;
@@ -299,7 +303,7 @@ const App: React.FC = () => {
     csvContent += headers.join(",") + "\n";
     dataToExport.forEach(row => {
       const sanitizedRow = row.map((val: any) => {
-        const s = String(val || '');
+        const s = String(val ?? '');
         return s.includes(',') ? `"${s}"` : s;
       });
       csvContent += sanitizedRow.join(",") + "\n";
@@ -809,14 +813,14 @@ const App: React.FC = () => {
                           <td className="px-6 py-4">
                             <div className="flex items-center gap-3">
                               <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 font-bold text-xs shrink-0">{record.TenChuHo ? record.TenChuHo.charAt(0) : '?'}</div>
-                              <div className="min-w-0"><p className="text-sm font-bold text-slate-800 truncate">{record.TenChuHo}</p><p className="text-[10px] text-slate-400">CCCD: {record.SoCCCD}</p></div>
+                              <div className="min-w-0"><p className="text-sm font-bold text-slate-800 truncate">{record.TenChuHo || ''}</p><p className="text-[10px] text-slate-400">CCCD: {record.SoCCCD || ''}</p></div>
                             </div>
                           </td>
                           <td className="px-6 py-4">
-                            <p className="text-sm font-semibold text-slate-700">SN {record.SoNha} {record.Duong}</p>
-                            <p className="text-[10px] text-slate-400 italic">{record.KDC}</p>
+                            <p className="text-sm font-semibold text-slate-700">{record.SoNha ? `SN ${record.SoNha} ` : ''}{record.Duong || ''}</p>
+                            <p className="text-[10px] text-slate-400 italic">{record.KDC || ''}</p>
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap"><span className="px-2 py-0.5 bg-slate-100 text-slate-600 rounded text-[10px] font-bold border border-slate-200">T{record.SoTo}-Th{record.SoThua}</span></td>
+                          <td className="px-6 py-4 whitespace-nowrap"><span className="px-2 py-0.5 bg-slate-100 text-slate-600 rounded text-[10px] font-bold border border-slate-200">T{record.SoTo || ''}-Th{record.SoThua || ''}</span></td>
                           <td className="px-6 py-4">{record.TranhChap ? <span className="text-[10px] text-orange-600 font-bold bg-orange-50 border border-orange-100 px-2 py-0.5 rounded-full">Tranh chấp</span> : <span className="text-[10px] text-emerald-600 font-bold bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-full">Ổn định</span>}</td>
                           <td className="px-6 py-4 text-right">
                             <div className="flex items-center justify-end gap-2 text-slate-400">
@@ -836,7 +840,7 @@ const App: React.FC = () => {
                     </tbody>
                   </table>
                 ) : (
-                  <div className="h-full w-full"><MapView center={[10.7719, 106.6983]} markers={filteredRecords.map(r => ({ id: r.id, lat: r.X, lng: r.Y, label: `${r.SoNha} ${r.Duong}` }))} /></div>
+                  <div className="h-full w-full"><MapView center={[10.7719, 106.6983]} markers={filteredRecords.map(r => ({ id: r.id, lat: r.X, lng: r.Y, label: `${r.SoNha || ''} ${r.Duong || ''}` }))} /></div>
                 )}
               </div>
               {viewMode === 'list' && <Pagination totalItems={filteredRecords.length} currentPage={currentPage} onPageChange={setCurrentPage} />}
@@ -891,15 +895,15 @@ const App: React.FC = () => {
                       {getPaginatedData(filteredPublicLand).map(land => (
                         <tr key={land.id} className="hover:bg-amber-50/30 transition-colors group">
                           <td className="px-6 py-4">
-                            <p className="text-sm font-bold text-slate-800">T{land.To} - Th{land.Thua}</p>
-                            <p className="text-[10px] text-blue-600 font-bold uppercase">{getHouseAddress(land.LinkedHouseId) || land.Phuong}</p>
+                            <p className="text-sm font-bold text-slate-800">T{land.To || ''} - Th{land.Thua || ''}</p>
+                            <p className="text-[10px] text-blue-600 font-bold uppercase">Số nhà: {getHouseAddress(land.LinkedHouseId) || land.Phuong || ''}</p>
                           </td>
                           <td className="px-6 py-4">
-                            <p className="text-sm font-semibold text-slate-700">{land.Donviquanl}</p>
-                            <p className="text-[10px] text-slate-400 italic">Sử dụng: {land.Donvisudun}</p>
+                            <p className="text-sm font-semibold text-slate-700">{land.Donviquanl || ''}</p>
+                            <p className="text-[10px] text-slate-400 italic">Sử dụng: {land.Donvisudun || ''}</p>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap font-mono text-sm">{(land.Dientich || 0).toLocaleString()}</td>
-                          <td className="px-6 py-4 text-xs font-medium text-slate-600">{land.Hientrang}</td>
+                          <td className="px-6 py-4 text-xs font-medium text-slate-600">{land.Hientrang || ''}</td>
                           <td className="px-6 py-4 text-right">
                             <div className="flex items-center justify-end gap-2">
                               <button onClick={() => { setEditingLand(land); setIsLandFormOpen(true); }} className="p-1.5 hover:bg-amber-600 hover:text-white text-amber-600 rounded-lg transition-colors"><Edit size={14} /></button>
@@ -914,11 +918,11 @@ const App: React.FC = () => {
                   <div className="h-full w-full">
                     <MapView 
                       center={[10.7719, 106.6983]} 
-                      markers={filteredPublicLand.map(l => ({ id: l.id, lat: l.X, lng: l.Y, label: `Đất công T${l.To}-Th${l.Thua}: ${l.Hientrang}` }))} 
+                      markers={filteredPublicLand.map(l => ({ id: l.id, lat: l.X, lng: l.Y, label: `Đất công T${l.To || ''}-Th${l.Thua || ''}: ${l.Hientrang || ''}` }))} 
                       polygons={filteredPublicLand.filter(l => l.geometry && l.geometry.length > 2).map(l => ({
                         id: l.id,
                         points: l.geometry!,
-                        label: `T${l.To}/Th${l.Thua}`,
+                        label: `T${l.To || ''}/Th${l.Thua || ''}`,
                         color: (l.Hientrang || '').toLowerCase().includes('trống') ? '#fbbf24' : '#3b82f6'
                       }))}
                     />
@@ -948,8 +952,8 @@ const App: React.FC = () => {
                     {getPaginatedData(filteredBanks).map(bank => (
                       <tr key={bank.id} className="hover:bg-slate-50 group">
                         <td className="px-6 py-4 font-mono text-xs text-blue-600">{bank.code || '--'}</td>
-                        <td className="px-6 py-4 font-bold text-slate-800">{bank.shortName}</td>
-                        <td className="px-6 py-4 text-sm text-slate-600">{bank.name}</td>
+                        <td className="px-6 py-4 font-bold text-slate-800">{bank.shortName || ''}</td>
+                        <td className="px-6 py-4 text-sm text-slate-600">{bank.name || ''}</td>
                         <td className="px-6 py-4 text-right">
                           <button onClick={() => { setEditingBank(bank); setIsBankFormOpen(true); }} className="p-1.5 hover:bg-blue-100 text-blue-600 rounded-lg"><Edit size={14} /></button>
                           <button onClick={() => handleDeleteBank(bank.id)} className="p-1.5 hover:bg-red-100 text-red-600 rounded-lg ml-2"><Trash2 size={14} /></button>
@@ -996,16 +1000,16 @@ const App: React.FC = () => {
                     {getPaginatedData(filteredGenerals).map(general => (
                       <tr key={general.id} className="hover:bg-indigo-50/30 transition-colors group">
                         <td className="px-6 py-4">
-                          <p className="text-sm font-bold text-slate-800">{general.HoTen}</p>
+                          <p className="text-sm font-bold text-slate-800">{general.HoTen || ''}</p>
                           <p className="text-[10px] text-blue-600 font-bold uppercase">Số nhà: {getHouseAddress(general.LinkedHouseId) || 'Chưa liên kết'}</p>
                         </td>
                         <td className="px-6 py-4">
-                          <span className="text-xs font-medium text-slate-600 bg-slate-100 px-2 py-0.5 rounded-full">{general.QuanHe}</span>
+                          <span className="text-xs font-medium text-slate-600 bg-slate-100 px-2 py-0.5 rounded-full">{general.QuanHe || ''}</span>
                         </td>
                         <td className="px-6 py-4">
-                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${general.Dien === 'TW' ? 'bg-red-50 text-red-600 border border-red-100' : 'bg-blue-50 text-blue-600 border border-blue-100'}`}>{general.Dien}</span>
+                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${general.Dien === 'TW' ? 'bg-red-50 text-red-600 border border-red-100' : 'bg-blue-50 text-blue-600 border border-blue-100'}`}>{general.Dien || ''}</span>
                         </td>
-                        <td className="px-6 py-4 text-xs font-semibold text-slate-700">{general.TinhTrang}</td>
+                        <td className="px-6 py-4 text-xs font-semibold text-slate-700">{general.TinhTrang || ''}</td>
                         <td className="px-6 py-4 text-center">
                           {general.NguoiNhanThay ? <span className="text-[10px] text-blue-600 font-bold bg-blue-50 px-2 py-0.5 rounded">{general.NguoiNhanThay}</span> : <span className="text-[10px] text-slate-400 italic">Chính chủ</span>}
                         </td>
@@ -1057,14 +1061,14 @@ const App: React.FC = () => {
                     {getPaginatedData(filteredMerits).map(merit => (
                       <tr key={merit.id} className="hover:bg-rose-50/30 transition-colors group">
                         <td className="px-6 py-4">
-                          <p className="text-sm font-bold text-slate-800">{merit.HoTen}</p>
+                          <p className="text-sm font-bold text-slate-800">{merit.HoTen || ''}</p>
                           <p className="text-[10px] text-blue-600 font-bold uppercase">Số nhà: {getHouseAddress(merit.LinkedHouseId) || 'Chưa liên kết'}</p>
                         </td>
                         <td className="px-6 py-4">
-                          <span className="text-xs font-medium text-slate-600 bg-slate-100 px-2 py-0.5 rounded-full">{merit.QuanHe}</span>
+                          <span className="text-xs font-medium text-slate-600 bg-slate-100 px-2 py-0.5 rounded-full">{merit.QuanHe || ''}</span>
                         </td>
                         <td className="px-6 py-4">
-                          <span className="text-xs font-bold text-rose-600 bg-rose-50 px-2 py-0.5 rounded border border-rose-100">{merit.LoaiDoiTuong}</span>
+                          <span className="text-xs font-bold text-rose-600 bg-rose-50 px-2 py-0.5 rounded border border-rose-100">{merit.LoaiDoiTuong || ''}</span>
                         </td>
                         <td className="px-6 py-4 text-center">
                            {merit.NguoiNhanThay ? <span className="text-[10px] text-rose-600 font-bold bg-rose-50 px-2 py-0.5 rounded">{merit.NguoiNhanThay}</span> : <span className="text-[10px] text-slate-400 italic">Chính chủ</span>}
@@ -1118,14 +1122,14 @@ const App: React.FC = () => {
                     {getPaginatedData(filteredMedals).map(medal => (
                       <tr key={medal.id} className="hover:bg-amber-50/30 transition-colors group">
                         <td className="px-6 py-4">
-                          <p className="text-sm font-bold text-slate-800">{medal.HoTen}</p>
+                          <p className="text-sm font-bold text-slate-800">{medal.HoTen || ''}</p>
                           <p className="text-[10px] text-blue-600 font-bold uppercase">Số nhà: {getHouseAddress(medal.LinkedHouseId) || 'Chưa liên kết'}</p>
                         </td>
                         <td className="px-6 py-4">
-                          <span className="text-xs font-medium text-slate-600 bg-slate-100 px-2 py-0.5 rounded-full">{medal.QuanHe}</span>
+                          <span className="text-xs font-medium text-slate-600 bg-slate-100 px-2 py-0.5 rounded-full">{medal.QuanHe || ''}</span>
                         </td>
                         <td className="px-6 py-4">
-                          <span className="text-xs font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-100">{medal.LoaiDoiTuong}</span>
+                          <span className="text-xs font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-100">{medal.LoaiDoiTuong || ''}</span>
                         </td>
                         <td className="px-6 py-4 text-center">
                            {medal.NguoiNhanThay ? <span className="text-[10px] text-amber-600 font-bold bg-amber-50 px-2 py-0.5 rounded">{medal.NguoiNhanThay}</span> : <span className="text-[10px] text-slate-400 italic">Chính chủ</span>}
@@ -1178,17 +1182,17 @@ const App: React.FC = () => {
                     {getPaginatedData(filteredPolicies).map(policy => (
                       <tr key={policy.id} className="hover:bg-indigo-50/30 transition-colors group">
                         <td className="px-6 py-4">
-                          <p className="text-sm font-bold text-slate-800">{policy.HoTen}</p>
+                          <p className="text-sm font-bold text-slate-800">{policy.HoTen || ''}</p>
                           <p className="text-[10px] text-blue-600 font-bold uppercase">Số nhà: {getHouseAddress(policy.LinkedHouseId) || 'Chưa liên kết'}</p>
                         </td>
                         <td className="px-6 py-4">
-                          <span className="text-xs font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-100">{policy.LoaiDienChinhSach}</span>
+                          <span className="text-xs font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-100">{policy.LoaiDienChinhSach || ''}</span>
                         </td>
                         <td className="px-6 py-4 text-center">
                            {policy.NguoiNhanThay ? <span className="text-[10px] text-indigo-600 font-bold bg-indigo-50 px-2 py-0.5 rounded">{policy.NguoiNhanThay}</span> : <span className="text-[10px] text-slate-400 italic">Chính chủ</span>}
                         </td>
                         <td className="px-6 py-4 text-right">
-                          <p className="text-xs font-mono text-slate-500">{policy.SoQuanLyHS}</p>
+                          <p className="text-xs font-mono text-slate-500">{policy.SoQuanLyHS || ''}</p>
                           <p className="text-sm font-black text-emerald-600">{(policy.SoTien || 0).toLocaleString()} VNĐ</p>
                         </td>
                         <td className="px-6 py-4 text-right">
@@ -1239,14 +1243,14 @@ const App: React.FC = () => {
                     {getPaginatedData(filteredSocials).map(social => (
                       <tr key={social.id} className="hover:bg-emerald-50/30 transition-colors group">
                         <td className="px-6 py-4">
-                          <p className="text-sm font-bold text-slate-800">{social.HoTen}</p>
+                          <p className="text-sm font-bold text-slate-800">{social.HoTen || ''}</p>
                           <p className="text-[10px] text-blue-600 font-bold uppercase">Số nhà: {getHouseAddress(social.LinkedHouseId) || 'Chưa liên kết'}</p>
                         </td>
                         <td className="px-6 py-4">
-                          <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100">{social.LoaiDien}</span>
+                          <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100">{social.LoaiDien || ''}</span>
                         </td>
                         <td className="px-6 py-4">
-                          <span className="text-xs font-medium text-slate-600 bg-slate-100 px-2 py-0.5 rounded-full">{social.QuanHe}</span>
+                          <span className="text-xs font-medium text-slate-600 bg-slate-100 px-2 py-0.5 rounded-full">{social.QuanHe || ''}</span>
                         </td>
                         <td className="px-6 py-4 text-center">
                            {social.NguoiNhanThay ? <span className="text-[10px] text-emerald-600 font-bold bg-emerald-50 px-2 py-0.5 rounded">{social.NguoiNhanThay}</span> : <span className="text-[10px] text-slate-400 italic">Chính chủ</span>}
@@ -1278,10 +1282,10 @@ const App: React.FC = () => {
                     <tr className="text-[10px] font-bold uppercase text-slate-400"><th className="px-6 py-4">Mã</th><th className="px-6 py-4">Tên tình trạng</th><th className="px-6 py-4 text-right">Thao tác</th></tr>
                   </thead>
                   <tbody className="divide-y">
-                    {getPaginatedData(generalStatuses.filter(s => s.name.toLowerCase().includes(searchTerm.toLowerCase()) || s.code.toLowerCase().includes(searchTerm.toLowerCase()))).map(st => (
+                    {getPaginatedData(generalStatuses.filter(s => (s.name || '').toLowerCase().includes(searchTerm.toLowerCase()) || (s.code || '').toLowerCase().includes(searchTerm.toLowerCase()))).map(st => (
                       <tr key={st.id} className="hover:bg-slate-50">
-                        <td className="px-6 py-4 font-mono text-xs text-slate-500">{st.code}</td>
-                        <td className="px-6 py-4 text-sm font-semibold text-slate-700">{st.name}</td>
+                        <td className="px-6 py-4 font-mono text-xs text-slate-500">{st.code || ''}</td>
+                        <td className="px-6 py-4 text-sm font-semibold text-slate-700">{st.name || ''}</td>
                         <td className="px-6 py-4 text-right">
                           <button onClick={() => { setEditingGs(st); setIsGsFormOpen(true); }} className="p-1.5 hover:bg-slate-100 text-slate-600 rounded-lg"><Edit size={14} /></button>
                           <button onClick={() => handleDeleteGs(st.id)} className="p-1.5 hover:bg-red-100 text-red-600 rounded-lg ml-2"><Trash2 size={14} /></button>
@@ -1306,10 +1310,10 @@ const App: React.FC = () => {
                     <tr className="text-[10px] font-bold uppercase text-slate-400"><th className="px-6 py-4">Mã</th><th className="px-6 py-4">Tên loại đối tượng</th><th className="px-6 py-4 text-right">Thao tác</th></tr>
                   </thead>
                   <tbody className="divide-y">
-                    {getPaginatedData(meritTypes.filter(m => m.name.toLowerCase().includes(searchTerm.toLowerCase()) || m.code.toLowerCase().includes(searchTerm.toLowerCase()))).map(mt => (
+                    {getPaginatedData(meritTypes.filter(m => (m.name || '').toLowerCase().includes(searchTerm.toLowerCase()) || (m.code || '').toLowerCase().includes(searchTerm.toLowerCase()))).map(mt => (
                       <tr key={mt.id} className="hover:bg-rose-50">
-                        <td className="px-6 py-4 font-mono text-xs text-rose-500">{mt.code}</td>
-                        <td className="px-6 py-4 text-sm font-semibold text-slate-700">{mt.name}</td>
+                        <td className="px-6 py-4 font-mono text-xs text-rose-500">{mt.code || ''}</td>
+                        <td className="px-6 py-4 text-sm font-semibold text-slate-700">{mt.name || ''}</td>
                         <td className="px-6 py-4 text-right">
                           <button onClick={() => { setEditingMt(mt); setIsMtFormOpen(true); }} className="p-1.5 hover:bg-rose-100 text-rose-600 rounded-lg"><Edit size={14} /></button>
                           <button onClick={() => handleDeleteMt(mt.id)} className="p-1.5 hover:bg-red-100 text-red-600 rounded-lg ml-2"><Trash2 size={14} /></button>
@@ -1334,10 +1338,10 @@ const App: React.FC = () => {
                     <tr className="text-[10px] font-bold uppercase text-slate-400"><th className="px-6 py-4">Mã</th><th className="px-6 py-4">Tên loại huân chương/huy chương</th><th className="px-6 py-4 text-right">Thao tác</th></tr>
                   </thead>
                   <tbody className="divide-y">
-                    {getPaginatedData(medalTypes.filter(m => m.name.toLowerCase().includes(searchTerm.toLowerCase()) || m.code.toLowerCase().includes(searchTerm.toLowerCase()))).map(md => (
+                    {getPaginatedData(medalTypes.filter(m => (m.name || '').toLowerCase().includes(searchTerm.toLowerCase()) || (m.code || '').toLowerCase().includes(searchTerm.toLowerCase()))).map(md => (
                       <tr key={md.id} className="hover:bg-amber-50">
-                        <td className="px-6 py-4 font-mono text-xs text-amber-600">{md.code}</td>
-                        <td className="px-6 py-4 text-sm font-semibold text-slate-700">{md.name}</td>
+                        <td className="px-6 py-4 font-mono text-xs text-amber-600">{md.code || ''}</td>
+                        <td className="px-6 py-4 text-sm font-semibold text-slate-700">{md.name || ''}</td>
                         <td className="px-6 py-4 text-right">
                           <button onClick={() => { setEditingMdt(md); setIsMdtFormOpen(true); }} className="p-1.5 hover:bg-amber-100 text-amber-600 rounded-lg"><Edit size={14} /></button>
                           <button onClick={() => handleDeleteMdt(md.id)} className="p-1.5 hover:bg-red-100 text-red-600 rounded-lg ml-2"><Trash2 size={14} /></button>
@@ -1362,10 +1366,10 @@ const App: React.FC = () => {
                     <tr className="text-[10px] font-bold uppercase text-slate-400"><th className="px-6 py-4">Mã</th><th className="px-6 py-4">Tên diện chính sách</th><th className="px-6 py-4 text-right">Thao tác</th></tr>
                   </thead>
                   <tbody className="divide-y">
-                    {getPaginatedData(policyTypes.filter(p => p.name.toLowerCase().includes(searchTerm.toLowerCase()) || p.code.toLowerCase().includes(searchTerm.toLowerCase()))).map(pt => (
+                    {getPaginatedData(policyTypes.filter(p => (p.name || '').toLowerCase().includes(searchTerm.toLowerCase()) || (p.code || '').toLowerCase().includes(searchTerm.toLowerCase()))).map(pt => (
                       <tr key={pt.id} className="hover:bg-indigo-50">
-                        <td className="px-6 py-4 font-mono text-xs text-indigo-500">{pt.code}</td>
-                        <td className="px-6 py-4 text-sm font-semibold text-slate-700">{pt.name}</td>
+                        <td className="px-6 py-4 font-mono text-xs text-indigo-500">{pt.code || ''}</td>
+                        <td className="px-6 py-4 text-sm font-semibold text-slate-700">{pt.name || ''}</td>
                         <td className="px-6 py-4 text-right">
                           <button onClick={() => { setEditingPt(pt); setIsPtFormOpen(true); }} className="p-1.5 hover:bg-indigo-100 text-indigo-600 rounded-lg"><Edit size={14} /></button>
                           <button onClick={() => handleDeletePt(pt.id)} className="p-1.5 hover:bg-red-100 text-red-600 rounded-lg ml-2"><Trash2 size={14} /></button>
@@ -1390,10 +1394,10 @@ const App: React.FC = () => {
                     <tr className="text-[10px] font-bold uppercase text-slate-400"><th className="px-6 py-4">Mã đường</th><th className="px-6 py-4">Tên đường</th><th className="px-6 py-4 text-right">Thao tác</th></tr>
                   </thead>
                   <tbody className="divide-y">
-                    {getPaginatedData(streets.filter(s => s.name.toLowerCase().includes(searchTerm.toLowerCase()) || s.code.toLowerCase().includes(searchTerm.toLowerCase()))).map(st => (
+                    {getPaginatedData(streets.filter(s => (s.name || '').toLowerCase().includes(searchTerm.toLowerCase()) || (s.code || '').toLowerCase().includes(searchTerm.toLowerCase()))).map(st => (
                       <tr key={st.id} className="hover:bg-slate-50">
-                        <td className="px-6 py-4 font-mono text-xs text-blue-600">{st.code}</td>
-                        <td className="px-6 py-4 text-sm font-semibold text-slate-700">{st.name}</td>
+                        <td className="px-6 py-4 font-mono text-xs text-blue-600">{st.code || ''}</td>
+                        <td className="px-6 py-4 text-sm font-semibold text-slate-700">{st.name || ''}</td>
                         <td className="px-6 py-4 text-right">
                           <button onClick={() => { setEditingStreet(st); setIsStreetFormOpen(true); }} className="p-1.5 hover:bg-blue-100 text-blue-600 rounded-lg"><Edit size={14} /></button>
                           <button onClick={() => handleDeleteStreet(st.id)} className="p-1.5 hover:bg-red-100 text-red-600 rounded-lg ml-2"><Trash2 size={14} /></button>
@@ -1418,10 +1422,10 @@ const App: React.FC = () => {
                     <tr className="text-[10px] font-bold uppercase text-slate-400"><th className="px-6 py-4">Mã diện</th><th className="px-6 py-4">Tên diện bảo trợ xã hội</th><th className="px-6 py-4 text-right">Thao tác</th></tr>
                   </thead>
                   <tbody className="divide-y">
-                    {getPaginatedData(socialProtectionTypes.filter(s => s.name.toLowerCase().includes(searchTerm.toLowerCase()) || s.code.toLowerCase().includes(searchTerm.toLowerCase()))).map(spt => (
+                    {getPaginatedData(socialProtectionTypes.filter(s => (s.name || '').toLowerCase().includes(searchTerm.toLowerCase()) || (s.code || '').toLowerCase().includes(searchTerm.toLowerCase()))).map(spt => (
                       <tr key={spt.id} className="hover:bg-emerald-50">
-                        <td className="px-6 py-4 font-mono text-xs text-emerald-600">{spt.code}</td>
-                        <td className="px-6 py-4 text-sm font-semibold text-slate-700">{spt.name}</td>
+                        <td className="px-6 py-4 font-mono text-xs text-emerald-600">{spt.code || ''}</td>
+                        <td className="px-6 py-4 text-sm font-semibold text-slate-700">{spt.name || ''}</td>
                         <td className="px-6 py-4 text-right">
                           <button onClick={() => { setEditingSpt(spt); setIsSptFormOpen(true); }} className="p-1.5 hover:bg-emerald-100 text-emerald-600 rounded-lg"><Edit size={14} /></button>
                           <button onClick={() => handleDeleteSpt(spt.id)} className="p-1.5 hover:bg-red-100 text-red-600 rounded-lg ml-2"><Trash2 size={14} /></button>
@@ -1446,10 +1450,10 @@ const App: React.FC = () => {
                     <tr className="text-[10px] font-bold uppercase text-slate-400"><th className="px-6 py-4">Mã</th><th className="px-6 py-4">Tên mối quan hệ với chủ hộ</th><th className="px-6 py-4 text-right">Thao tác</th></tr>
                   </thead>
                   <tbody className="divide-y">
-                    {getPaginatedData(relationships.filter(r => r.name.toLowerCase().includes(searchTerm.toLowerCase()) || r.code.toLowerCase().includes(searchTerm.toLowerCase()))).map(rel => (
+                    {getPaginatedData(relationships.filter(r => (r.name || '').toLowerCase().includes(searchTerm.toLowerCase()) || (r.code || '').toLowerCase().includes(searchTerm.toLowerCase()))).map(rel => (
                       <tr key={rel.id} className="hover:bg-slate-50">
-                        <td className="px-6 py-4 font-mono text-xs text-pink-600">{rel.code}</td>
-                        <td className="px-6 py-4 text-sm font-semibold text-slate-700">{rel.name}</td>
+                        <td className="px-6 py-4 font-mono text-xs text-pink-600">{rel.code || ''}</td>
+                        <td className="px-6 py-4 text-sm font-semibold text-slate-700">{rel.name || ''}</td>
                         <td className="px-6 py-4 text-right">
                           <button onClick={() => { setEditingRel(rel); setIsRelFormOpen(true); }} className="p-1.5 hover:bg-pink-100 text-pink-600 rounded-lg"><Edit size={14} /></button>
                           <button onClick={() => handleDeleteRel(rel.id)} className="p-1.5 hover:bg-red-100 text-red-600 rounded-lg ml-2"><Trash2 size={14} /></button>
@@ -1485,10 +1489,10 @@ const App: React.FC = () => {
                         <tr className="text-[10px] font-bold uppercase text-slate-400"><th className="px-6 py-4">Tên khu phố MỚI</th><th className="px-6 py-4">Tên khu phố CŨ</th><th className="px-6 py-4">Ranh giới</th><th className="px-6 py-4 text-right">Thao tác</th></tr>
                       </thead>
                       <tbody className="divide-y">
-                        {getPaginatedData(neighborhoods.filter(n => n.nameNew.toLowerCase().includes(searchTerm.toLowerCase()) || n.nameOld.toLowerCase().includes(searchTerm.toLowerCase()))).map(nb => (
+                        {getPaginatedData(neighborhoods.filter(n => (n.nameNew || '').toLowerCase().includes(searchTerm.toLowerCase()) || (n.nameOld || '').toLowerCase().includes(searchTerm.toLowerCase()))).map(nb => (
                           <tr key={nb.id} className="hover:bg-slate-50">
-                            <td className="px-6 py-4 text-sm font-semibold text-slate-700">{nb.nameNew}</td>
-                            <td className="px-6 py-4 text-sm text-slate-500">{nb.nameOld}</td>
+                            <td className="px-6 py-4 text-sm font-semibold text-slate-700">{nb.nameNew || ''}</td>
+                            <td className="px-6 py-4 text-sm text-slate-500">{nb.nameOld || ''}</td>
                             <td className="px-6 py-4">
                               {nb.geometry && nb.geometry.length > 0 ? (
                                 <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100">Đã vẽ ranh giới</span>
@@ -1514,7 +1518,7 @@ const App: React.FC = () => {
                     polygons={neighborhoods.filter(n => n.geometry && n.geometry.length > 2).map(n => ({
                       id: n.id,
                       points: n.geometry!,
-                      label: n.nameNew,
+                      label: n.nameNew || '',
                       color: '#8b5cf6'
                     }))}
                   />
@@ -1536,24 +1540,24 @@ const App: React.FC = () => {
       case 'planning':
         const mapHouseMarkers = mapLayers.houses ? records
           .filter(r => (r.SoNha || '').toLowerCase().includes(mapSearch.toLowerCase()) || (r.Duong || '').toLowerCase().includes(mapSearch.toLowerCase()) || (r.TenChuHo || '').toLowerCase().includes(mapSearch.toLowerCase()))
-          .map(r => ({ id: `house-${r.id}`, lat: r.X, lng: r.Y, label: `Số nhà: ${r.SoNha} ${r.Duong}` })) : [];
+          .map(r => ({ id: `house-${r.id}`, lat: r.X, lng: r.Y, label: `Số nhà: ${r.SoNha || ''} ${r.Duong || ''}` })) : [];
 
         const mapLandMarkers = mapLayers.publicLand ? publicLands
           .filter(l => (l.Thua || '').includes(mapSearch) || (l.To || '').includes(mapSearch) || (l.Donviquanl || '').toLowerCase().includes(mapSearch.toLowerCase()))
-          .map(l => ({ id: `land-m-${l.id}`, lat: l.X, lng: l.Y, label: `Đất công: T${l.To}/Th${l.Thua}` })) : [];
+          .map(l => ({ id: `land-m-${l.id}`, lat: l.X, lng: l.Y, label: `Đất công: T${l.To || ''}/Th${l.Thua || ''}` })) : [];
 
         const mapLandPolygons = mapLayers.publicLand ? publicLands
           .filter(l => l.geometry && l.geometry.length > 2 && ((l.Thua || '').includes(mapSearch) || (l.To || '').includes(mapSearch)))
-          .map(l => ({ id: `land-p-${l.id}`, points: l.geometry!, label: `Đất công: T${l.To}/Th${l.Thua}`, color: '#fbbf24' })) : [];
+          .map(l => ({ id: `land-p-${l.id}`, points: l.geometry!, label: `Đất công: T${l.To || ''}/Th${l.Thua || ''}`, color: '#fbbf24' })) : [];
 
         const mapNbPolygons = mapLayers.neighborhoods ? neighborhoods
           .filter(n => n.geometry && n.geometry.length > 2 && ((n.nameNew || '').toLowerCase().includes(mapSearch.toLowerCase())))
-          .map(n => ({ id: `nb-p-${n.id}`, points: n.geometry!, label: n.nameNew, color: '#8b5cf6' })) : [];
+          .map(n => ({ id: `nb-p-${n.id}`, points: n.geometry!, label: n.nameNew || '', color: '#8b5cf6' })) : [];
 
         const mapWardPolygon = mapLayers.ward && wardBoundary.geometry && wardBoundary.geometry.length > 2 ? [{
           id: 'ward-poly-view',
           points: wardBoundary.geometry,
-          label: wardBoundary.name,
+          label: wardBoundary.name || '',
           color: '#3b82f6'
         }] : [];
 

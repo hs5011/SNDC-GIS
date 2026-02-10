@@ -31,7 +31,7 @@ const HouseLookup: React.FC<HouseLookupProps> = ({
     return houses.filter(h => 
       (h.SoNha || '').toLowerCase().includes(s) ||
       (h.Duong || '').toLowerCase().includes(s) ||
-      (`${h.SoNha} ${h.Duong}`).toLowerCase().includes(s) ||
+      (`${h.SoNha || ''} ${h.Duong || ''}`).toLowerCase().includes(s) ||
       (h.TenChuHo || '').toLowerCase().includes(s) ||
       (h.SoCCCD || '').includes(s)
     ).slice(0, 10);
@@ -80,8 +80,8 @@ const HouseLookup: React.FC<HouseLookupProps> = ({
                   className="w-full text-left px-5 py-4 hover:bg-blue-50 transition-colors flex items-center justify-between group"
                 >
                   <div>
-                    <div className="text-sm font-bold text-slate-800">SN {h.SoNha} {h.Duong}</div>
-                    <div className="text-xs text-slate-500 font-medium">Chủ hộ: {h.TenChuHo} | CCCD: {h.SoCCCD}</div>
+                    <div className="text-sm font-bold text-slate-800">{h.SoNha ? `SN ${h.SoNha} ` : ''}{h.Duong || ''}</div>
+                    <div className="text-xs text-slate-500 font-medium">Chủ hộ: {h.TenChuHo || ''} | CCCD: {h.SoCCCD || ''}</div>
                   </div>
                   <ChevronRight size={20} className="text-slate-300 group-hover:text-blue-600 transition-colors" />
                 </button>
@@ -101,11 +101,11 @@ const HouseLookup: React.FC<HouseLookupProps> = ({
                   <Home size={30} />
                 </div>
                 <div>
-                  <h3 className="text-2xl font-black">SN {selectedHouse.SoNha} {selectedHouse.Duong}</h3>
+                  <h3 className="text-2xl font-black">{selectedHouse.SoNha ? `SN ${selectedHouse.SoNha} ` : ''}{selectedHouse.Duong || ''}</h3>
                   <div className="flex items-center gap-4 mt-1 opacity-90 text-sm font-medium">
-                    <span className="flex items-center gap-1"><Users size={14} /> Chủ hộ: {selectedHouse.TenChuHo}</span>
-                    <span className="flex items-center gap-1"><MapPin size={14} /> {selectedHouse.KDC}</span>
-                    <span className="px-2 py-0.5 bg-white/20 rounded font-mono text-xs">CCCD: {selectedHouse.SoCCCD}</span>
+                    <span className="flex items-center gap-1"><Users size={14} /> Chủ hộ: {selectedHouse.TenChuHo || ''}</span>
+                    <span className="flex items-center gap-1"><MapPin size={14} /> {selectedHouse.KDC || ''}</span>
+                    {selectedHouse.SoCCCD && <span className="px-2 py-0.5 bg-white/20 rounded font-mono text-xs">CCCD: {selectedHouse.SoCCCD}</span>}
                   </div>
                 </div>
               </div>
@@ -204,7 +204,7 @@ const ListSection: React.FC<{ title: string; icon: React.ReactNode; data: any[];
                     {col === 'SoTien' ? (
                       <span className="font-black text-emerald-600">{(item[col] || 0).toLocaleString()}</span>
                     ) : col === 'Dien' ? (
-                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${item[col] === 'TW' ? 'bg-red-50 text-red-600' : 'bg-blue-50 text-blue-600'}`}>{item[col]}</span>
+                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${item[col] === 'TW' ? 'bg-red-50 text-red-600' : 'bg-blue-50 text-blue-600'}`}>{item[col] || ''}</span>
                     ) : (
                       <span className={col === 'HoTen' ? 'font-bold text-slate-700' : 'text-slate-600'}>{item[col] || '--'}</span>
                     )}

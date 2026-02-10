@@ -54,18 +54,20 @@ const RelatedRecordsManager: React.FC<RelatedRecordsManagerProps> = ({
     setCurrentPages(prev => ({ ...prev, [id]: newPage }));
   };
 
+  const houseAddr = [house.SoNha ? `SN ${house.SoNha}` : '', house.Duong || ''].filter(Boolean).join(' ');
+
   const handleExportExcel = () => {
     let csvContent = "\uFEFF"; // UTF-8 BOM for Vietnamese character support
     
     // Header section for the House
     csvContent += `BÁO CÁO TỔNG HỢP ĐỐI TƯỢNG GẮN VỚI SỐ NHÀ\n`;
-    csvContent += `Địa chỉ,${house.SoNha} ${house.Duong}\n`;
-    csvContent += `Chủ hộ,${house.TenChuHo}\n`;
+    csvContent += `Địa chỉ,${houseAddr}\n`;
+    csvContent += `Chủ hộ,${house.TenChuHo || ''}\n`;
     csvContent += `Ngày xuất,${new Date().toLocaleString('vi-VN')}\n\n`;
 
     // Function to sanitize CSV data
     const sanitize = (val: any) => {
-      const s = String(val || '');
+      const s = String(val ?? '');
       return s.includes(',') ? `"${s}"` : s;
     };
 
@@ -81,7 +83,7 @@ const RelatedRecordsManager: React.FC<RelatedRecordsManagerProps> = ({
     csvContent += `2. DANH SÁCH NGƯỜI CÓ CÔNG\n`;
     csvContent += `Họ và tên,Quan hệ,Loại đối tượng,Số hồ sơ,Số tiền trợ cấp,Người nhận thay\n`;
     merits.forEach(m => {
-      csvContent += `${sanitize(m.HoTen)},${sanitize(m.QuanHe)},${sanitize(m.LoaiDoiTuong)},${sanitize(m.SoQuanLyHS)},${m.SoTien},${sanitize(m.NguoiNhanThay)}\n`;
+      csvContent += `${sanitize(m.HoTen)},${sanitize(m.QuanHe)},${sanitize(m.LoaiDoiTuong)},${sanitize(m.SoQuanLyHS)},${m.SoTien || 0},${sanitize(m.NguoiNhanThay)}\n`;
     });
     csvContent += `\n`;
 
@@ -89,7 +91,7 @@ const RelatedRecordsManager: React.FC<RelatedRecordsManagerProps> = ({
     csvContent += `3. DANH SÁCH HUÂN CHƯƠNG KHÁNG CHIẾN\n`;
     csvContent += `Họ và tên,Quan hệ,Loại huân chương,Số hồ sơ,Số tiền,Người nhận thay\n`;
     medals.forEach(m => {
-      csvContent += `${sanitize(m.HoTen)},${sanitize(m.QuanHe)},${sanitize(m.LoaiDoiTuong)},${sanitize(m.SoQuanLyHS)},${m.SoTien},${sanitize(m.NguoiNhanThay)}\n`;
+      csvContent += `${sanitize(m.HoTen)},${sanitize(m.QuanHe)},${sanitize(m.LoaiDoiTuong)},${sanitize(m.SoQuanLyHS)},${m.SoTien || 0},${sanitize(m.NguoiNhanThay)}\n`;
     });
     csvContent += `\n`;
 
@@ -97,7 +99,7 @@ const RelatedRecordsManager: React.FC<RelatedRecordsManagerProps> = ({
     csvContent += `4. DANH SÁCH ĐỐI TƯỢNG CHÍNH SÁCH\n`;
     csvContent += `Họ và tên,Quan hệ,Diện chính sách,Số hồ sơ,Số tiền,Tỷ lệ tổn thương\n`;
     policies.forEach(p => {
-      csvContent += `${sanitize(p.HoTen)},${sanitize(p.QuanHe)},${sanitize(p.LoaiDienChinhSach)},${sanitize(p.SoQuanLyHS)},${p.SoTien},${sanitize(p.TyLeTonThuong)}\n`;
+      csvContent += `${sanitize(p.HoTen)},${sanitize(p.QuanHe)},${sanitize(p.LoaiDienChinhSach)},${sanitize(p.SoQuanLyHS)},${p.SoTien || 0},${sanitize(p.TyLeTonThuong)}\n`;
     });
     csvContent += `\n`;
 
@@ -105,13 +107,13 @@ const RelatedRecordsManager: React.FC<RelatedRecordsManagerProps> = ({
     csvContent += `5. DANH SÁCH BẢO TRỢ XÃ HỘI\n`;
     csvContent += `Họ và tên,Quan hệ,Diện bảo trợ,Số hồ sơ,Số tiền,Người nhận thay\n`;
     socialProtections.forEach(s => {
-      csvContent += `${sanitize(s.HoTen)},${sanitize(s.QuanHe)},${sanitize(s.LoaiDien)},${sanitize(s.SoQuanLyHS)},${s.SoTien},${sanitize(s.NguoiNhanThay)}\n`;
+      csvContent += `${sanitize(s.HoTen)},${sanitize(s.QuanHe)},${sanitize(s.LoaiDien)},${sanitize(s.SoQuanLyHS)},${s.SoTien || 0},${sanitize(s.NguoiNhanThay)}\n`;
     });
 
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement("a");
     const url = URL.createObjectURL(blob);
-    const fileName = `Ho_So_Doi_Tuong_${house.SoNha}_${house.Duong.replace(/\s+/g, '_')}_${new Date().toISOString().slice(0, 10)}.csv`;
+    const fileName = `Ho_So_Doi_Tuong_${(house.SoNha || '').replace(/\//g, '-')}_${(house.Duong || '').replace(/\s+/g, '_')}_${new Date().toISOString().slice(0, 10)}.csv`;
     
     link.setAttribute("href", url);
     link.setAttribute("download", fileName);
@@ -135,9 +137,9 @@ const RelatedRecordsManager: React.FC<RelatedRecordsManagerProps> = ({
                 Quản lý đối tượng gắn với số nhà
               </h2>
               <div className="flex items-center gap-3 text-sm text-slate-500 font-medium mt-0.5">
-                <span className="flex items-center gap-1 text-blue-600 font-bold"><MapPin size={14} /> {house.SoNha} {house.Duong}</span>
+                <span className="flex items-center gap-1 text-blue-600 font-bold"><MapPin size={14} /> {houseAddr}</span>
                 <span className="w-1 h-1 bg-slate-300 rounded-full"></span>
-                <span>Chủ hộ: <strong className="text-slate-700">{house.TenChuHo}</strong></span>
+                <span>Chủ hộ: <strong className="text-slate-700">{house.TenChuHo || ''}</strong></span>
               </div>
             </div>
           </div>
@@ -164,7 +166,7 @@ const RelatedRecordsManager: React.FC<RelatedRecordsManagerProps> = ({
 
             // Lọc dữ liệu theo tìm kiếm
             const filteredData = cat.data.filter(item => 
-              item.HoTen.toLowerCase().includes(searchTerm.toLowerCase()) ||
+              (item.HoTen || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
               (item.SoQuanLyHS || '').toLowerCase().includes(searchTerm.toLowerCase())
             );
 
@@ -220,7 +222,7 @@ const RelatedRecordsManager: React.FC<RelatedRecordsManagerProps> = ({
                         paginatedData.map((item) => (
                           <tr key={item.id} className="hover:bg-slate-50/80 transition-colors group">
                             <td className="px-6 py-4">
-                              <p className="font-bold text-slate-800">{item.HoTen}</p>
+                              <p className="font-bold text-slate-800">{item.HoTen || ''}</p>
                               {(item as any).SoQuanLyHS ? (
                                 <p className="text-[10px] text-blue-500 font-mono font-bold mt-0.5">Mã HS: {(item as any).SoQuanLyHS}</p>
                               ) : (
@@ -229,12 +231,12 @@ const RelatedRecordsManager: React.FC<RelatedRecordsManagerProps> = ({
                             </td>
                             <td className="px-6 py-4">
                               <span className="px-2.5 py-1 bg-slate-100 text-slate-600 rounded-lg text-xs font-bold border border-slate-200">
-                                {item.QuanHe}
+                                {item.QuanHe || ''}
                               </span>
                             </td>
                             <td className="px-6 py-4">
                               <span className={`text-xs font-black text-${cat.color}-700`}>
-                                {(item as any).LoaiDoiTuong || (item as any).Dien || (item as any).LoaiDienChinhSach || (item as any).LoaiDien}
+                                {(item as any).LoaiDoiTuong || (item as any).Dien || (item as any).LoaiDienChinhSach || (item as any).LoaiDien || ''}
                               </span>
                               {(item as any).SoTien > 0 && (
                                 <p className="text-[10px] text-emerald-600 font-bold mt-1">
