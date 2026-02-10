@@ -33,9 +33,9 @@ const PublicLandForm: React.FC<PublicLandFormProps> = ({ initialData, onSubmit, 
       (h.TenChuHo || '').toLowerCase().includes(s) ||
       (h.SoNha || '').toLowerCase().includes(s) ||
       (h.Duong || '').toLowerCase().includes(s) ||
-      (`${h.SoNha} ${h.Duong}`).toLowerCase().includes(s) ||
+      (`${h.SoNha || ''} ${h.Duong || ''}`).toLowerCase().includes(s) ||
       (h.SoCCCD || '').includes(s)
-    ).slice(0, 8);
+    ).slice(0, 15);
   }, [houseSearch, houseRecords]);
 
   const selectedHouse = useMemo(() => {
@@ -114,12 +114,12 @@ const PublicLandForm: React.FC<PublicLandFormProps> = ({ initialData, onSubmit, 
                 <div className="space-y-4 border-t pt-6">
                   <label className="text-sm font-bold text-slate-700 flex items-center gap-2"><Search size={16} className="text-blue-600" /> Liên kết với Số nhà <span className="text-red-500 font-black">*</span></label>
                   <div className="relative">
-                    <div className="flex items-center gap-2 px-3 py-2 border rounded-lg bg-white focus-within:ring-2 focus-within:ring-blue-500">
+                    <div className="flex items-center gap-2 px-3 py-2 border rounded-lg bg-white focus-within:ring-2 focus-within:ring-blue-500 shadow-sm">
                       <Search size={16} className="text-slate-400" />
                       <input type="text" placeholder="Tìm tên chủ hộ, số nhà, đường..." className="w-full text-sm outline-none" value={houseSearch} onChange={(e) => setHouseSearch(e.target.value)} />
                     </div>
                     {filteredHouses.length > 0 && (
-                      <div className="absolute top-full left-0 right-0 z-20 mt-1 bg-white border rounded-xl shadow-2xl overflow-hidden divide-y">
+                      <div className="absolute top-full left-0 right-0 z-[100] mt-1 bg-white border rounded-xl shadow-2xl overflow-y-auto max-h-[400px] divide-y custom-scrollbar">
                         {filteredHouses.map(house => (
                           <button 
                             key={house.id} 
@@ -127,8 +127,8 @@ const PublicLandForm: React.FC<PublicLandFormProps> = ({ initialData, onSubmit, 
                             className="w-full text-left px-4 py-3 hover:bg-blue-50 transition-colors flex justify-between items-center group"
                           >
                             <div>
-                              <div className="text-sm font-bold text-slate-800">SN {house.SoNha} {house.Duong}</div>
-                              <div className="text-xs text-slate-500 font-medium">Chủ hộ: {house.TenChuHo} | CCCD: {house.SoCCCD}</div>
+                              <div className="text-sm font-bold text-slate-800">{house.SoNha ? `SN ${house.SoNha} ` : ''}{house.Duong || ''}</div>
+                              <div className="text-xs text-slate-500 font-medium">Chủ hộ: {house.TenChuHo || ''} | CCCD: {house.SoCCCD || ''}</div>
                             </div>
                             <Plus size={14} className="text-blue-500 opacity-0 group-hover:opacity-100 transition-opacity" />
                           </button>
@@ -141,8 +141,8 @@ const PublicLandForm: React.FC<PublicLandFormProps> = ({ initialData, onSubmit, 
                       <div className="flex items-center gap-3">
                         <CheckCircle2 size={24} className="text-emerald-600" />
                         <div>
-                           <div className="text-sm font-bold text-slate-800">SN {selectedHouse.SoNha} {selectedHouse.Duong}</div>
-                           <div className="text-xs text-slate-500 font-medium">Chủ hộ: {selectedHouse.TenChuHo}</div>
+                           <div className="text-sm font-bold text-slate-800">{selectedHouse.SoNha ? `SN ${selectedHouse.SoNha} ` : ''}{selectedHouse.Duong || ''}</div>
+                           <div className="text-xs text-slate-500 font-medium">Chủ hộ: {selectedHouse.TenChuHo || ''}</div>
                         </div>
                       </div>
                       <button onClick={() => setFormData({...formData, LinkedHouseId: undefined})} className="p-2 text-red-500 hover:bg-red-100 rounded-lg transition-colors"><Trash2 size={16} /></button>

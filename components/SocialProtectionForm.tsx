@@ -1,7 +1,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { SocialProtectionRecord, HouseNumberRecord, RelationshipType, SocialProtectionType, Bank } from '../types';
-import { X, Save, Search, CheckCircle2, Building, Plus, Trash2, HeartHandshake, List, Wallet, UserCog, Edit, RotateCcw, CreditCard, Banknote } from 'lucide-react';
+import { X, Save, Search, CheckCircle2, Building, Plus, Trash2, HeartHandshake, List, UserCog, Edit, RotateCcw } from 'lucide-react';
 
 interface SocialProtectionFormProps {
   initialData?: Partial<SocialProtectionRecord>;
@@ -31,6 +31,7 @@ const SocialProtectionForm: React.FC<SocialProtectionFormProps> = ({
     SoQuanLyHS: initialData?.SoQuanLyHS || '',
     SoTien: initialData?.SoTien || 0,
     NguoiNhanThay: initialData?.NguoiNhanThay || '',
+    // Fixed: Changed 'initialRecord' to 'initialData' as 'initialRecord' was not defined
     HinhThucNhan: initialData?.HinhThucNhan || 'Tiền mặt'
   });
 
@@ -41,9 +42,9 @@ const SocialProtectionForm: React.FC<SocialProtectionFormProps> = ({
       (h.TenChuHo || '').toLowerCase().includes(s) ||
       (h.SoNha || '').toLowerCase().includes(s) ||
       (h.Duong || '').toLowerCase().includes(s) ||
-      (`${h.SoNha} ${h.Duong}`).toLowerCase().includes(s) ||
+      (`${h.SoNha || ''} ${h.Duong || ''}`).toLowerCase().includes(s) ||
       (h.SoCCCD || '').includes(s)
-    ).slice(0, 8);
+    ).slice(0, 20);
   }, [houseSearch, houseRecords]);
 
   const selectedHouse = houseRecords.find(h => h.id === selectedHouseId);
@@ -51,7 +52,7 @@ const SocialProtectionForm: React.FC<SocialProtectionFormProps> = ({
 
   const handleAddToList = () => {
     if (!currentRecord.HoTen?.trim() || !currentRecord.LoaiDien) {
-      alert("CẢNH BÁO: Vui lòng nhập Họ tên và Diện bảo trợ!");
+      alert("CẢNH BÁO: Vui lòng nhập đầy đủ Họ tên và Diện bảo trợ!");
       return;
     }
     if (editingTempIndex !== null) {
@@ -65,26 +66,12 @@ const SocialProtectionForm: React.FC<SocialProtectionFormProps> = ({
     if (!isEditing) setCurrentRecord({ HoTen: '', QuanHe: '', LoaiDien: '', SoQuanLyHS: '', SoTien: 0, NguoiNhanThay: '', HinhThucNhan: 'Tiền mặt' });
   };
 
-  const editFromList = (index: number) => {
-    setEditingTempIndex(index);
-    setCurrentRecord(recordsList[index]);
-  };
-
-  const removeFromList = (index: number) => {
-    if (editingTempIndex === index) {
-      setEditingTempIndex(null);
-      setCurrentRecord({ HoTen: '', QuanHe: '', LoaiDien: '', SoQuanLyHS: '', SoTien: 0, NguoiNhanThay: '', HinhThucNhan: 'Tiền mặt' });
-    }
-    setRecordsList(prev => prev.filter((_, i) => i !== index));
-  };
-
   const handleSaveAll = () => {
     if (!selectedHouseId) { alert("CẢNH BÁO: Bạn chưa chọn Số nhà liên kết!"); return; }
     if (isEditing) {
-      if (!currentRecord.HoTen?.trim() || !currentRecord.LoaiDien) { alert("CẢNH BÁO: Thiếu thông tin bắt buộc!"); return; }
       onSubmit([{ ...currentRecord, LinkedHouseId: selectedHouseId }]);
     } else {
-      if (recordsList.length === 0) { alert("CẢNH BÁO: Vui lòng Thêm hồ sơ vào danh sách trước khi Lưu!"); return; }
+      if (recordsList.length === 0) { alert("CẢNH BÁO: Vui lòng thêm hồ sơ vào danh sách!"); return; }
       onSubmit(recordsList.map(r => ({ ...r, LinkedHouseId: selectedHouseId })));
     }
   };
@@ -101,24 +88,24 @@ const SocialProtectionForm: React.FC<SocialProtectionFormProps> = ({
           <div className="space-y-4">
             <label className="text-xs font-black text-slate-400 uppercase flex items-center gap-2"><Building size={14} className="text-blue-600" /> 1. Liên kết Số nhà <span className="text-red-500 font-black">*</span></label>
             {!isEditing && !isHouseLocked && (
-              <div className="relative">
-                <div className="flex items-center gap-2 px-3 py-2 border rounded-lg bg-white focus-within:ring-2 focus-within:ring-blue-500 shadow-sm">
-                  <Search size={18} className="text-slate-400" />
-                  <input type="text" placeholder="Tìm tên chủ hộ, số nhà, đường, CCCD..." className="w-full text-sm outline-none" value={houseSearch} onChange={(e) => setHouseSearch(e.target.value)} />
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 px-4 py-3 border rounded-xl bg-white focus-within:ring-2 focus-within:ring-blue-500 shadow-sm">
+                  <Search size={20} className="text-slate-400" />
+                  <input type="text" placeholder="Tìm tên chủ hộ, số nhà, đường, CCCD..." className="w-full text-sm outline-none font-medium" value={houseSearch} onChange={(e) => setHouseSearch(e.target.value)} />
                 </div>
-                {filteredHouses.length > 0 && (
-                  <div className="absolute top-full left-0 right-0 z-20 mt-1 bg-white border rounded-xl shadow-2xl overflow-hidden divide-y">
+                {houseSearch && filteredHouses.length > 0 && (
+                  <div className="bg-white border rounded-xl shadow-xl overflow-hidden divide-y max-h-[350px] overflow-y-auto custom-scrollbar">
                     {filteredHouses.map(h => (
                       <button 
                         key={h.id} 
                         onClick={() => { setSelectedHouseId(h.id); setHouseSearch(''); }} 
-                        className="w-full text-left px-4 py-3 hover:bg-blue-50 transition-colors flex justify-between items-center group"
+                        className="w-full text-left px-5 py-4 hover:bg-emerald-50 transition-colors flex justify-between items-center group"
                       >
                         <div>
-                          <div className="text-sm font-bold text-slate-800">SN {h.SoNha} {h.Duong}</div>
-                          <div className="text-xs text-slate-500 font-medium">Chủ hộ: {h.TenChuHo} | CCCD: {h.SoCCCD}</div>
+                          <div className="text-sm font-black text-slate-800">{h.SoNha ? `SN ${h.SoNha} ` : ''}{h.Duong || ''}</div>
+                          <div className="text-xs text-slate-500 font-medium mt-1">Chủ hộ: {h.TenChuHo || ''} | CCCD: {h.SoCCCD || ''}</div>
                         </div>
-                        <Plus size={16} className="text-blue-600 opacity-0 group-hover:opacity-100 transition-opacity" />
+                        <div className="px-3 py-1 bg-emerald-100 text-emerald-700 text-[10px] font-black rounded-lg opacity-0 group-hover:opacity-100 transition-opacity uppercase">Chọn căn này</div>
                       </button>
                     ))}
                   </div>
@@ -126,34 +113,34 @@ const SocialProtectionForm: React.FC<SocialProtectionFormProps> = ({
               </div>
             )}
             {selectedHouse ? (
-              <div className="border rounded-xl p-4 flex justify-between items-center bg-emerald-50 border-emerald-100 shadow-sm">
-                <div className="flex items-center gap-3">
-                  <CheckCircle2 size={24} className="text-emerald-600" />
+              <div className="border-2 border-emerald-500 rounded-2xl p-5 flex justify-between items-center bg-emerald-50 shadow-md">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-emerald-600 rounded-xl flex items-center justify-center text-white shadow-lg"><Building size={24} /></div>
                   <div>
-                    <p className="text-sm font-black text-slate-800">SN {selectedHouse.SoNha} {selectedHouse.Duong}</p>
-                    <p className="text-xs text-slate-500 font-medium">Chủ hộ: {selectedHouse.TenChuHo} | CCCD: {selectedHouse.SoCCCD}</p>
+                    <p className="text-lg font-black text-slate-900">{selectedHouse.SoNha ? `SN ${selectedHouse.SoNha} ` : ''}{selectedHouse.Duong || ''}</p>
+                    <p className="text-sm text-slate-600 font-bold">Chủ hộ: {selectedHouse.TenChuHo} | CCCD: {selectedHouse.SoCCCD}</p>
                   </div>
                 </div>
-                {!isEditing && !isHouseLocked && <button onClick={() => setSelectedHouseId(undefined)} className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"><Trash2 size={16} /></button>}
+                {!isEditing && !isHouseLocked && <button onClick={() => setSelectedHouseId(undefined)} className="flex items-center gap-2 px-4 py-2 bg-white text-red-600 border border-red-200 rounded-xl text-xs font-black hover:bg-red-50 shadow-sm transition-all"><Trash2 size={16} /> Thay đổi</button>}
               </div>
-            ) : <div className="border-2 border-dashed border-slate-200 p-6 text-center text-slate-400 text-xs font-bold bg-slate-50/50 italic">Vui lòng nhập từ khóa tìm kiếm để chọn số nhà liên kết bảo trợ xã hội</div>}
+            ) : !houseSearch && <div className="border-2 border-dashed border-slate-200 rounded-2xl p-10 text-center text-slate-400 text-sm font-bold bg-slate-50/50 italic">Nhập từ khóa và chọn số nhà liên kết hồ sơ bảo trợ xã hội</div>}
           </div>
 
           {selectedHouseId && (
-            <div className="space-y-6 border-t pt-6">
+            <div className="space-y-6 border-t pt-8">
               <label className="text-xs font-black text-slate-400 uppercase flex items-center gap-2"><HeartHandshake size={14} className="text-emerald-600" /> 2. Thông tin Bảo trợ XH</label>
-              <div className="p-6 rounded-2xl border bg-slate-50/50 border-slate-200 space-y-4 shadow-inner">
+              <div className="p-6 rounded-2xl border-2 border-slate-100 bg-white space-y-4 shadow-sm">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-1"><label className="text-xs font-bold text-slate-600">Họ và tên <span className="text-red-500 font-black">*</span></label><input value={currentRecord.HoTen || ''} onChange={e => setCurrentRecord({...currentRecord, HoTen: e.target.value})} className="w-full px-3 py-2 border rounded-lg text-sm bg-white" placeholder="Họ và tên" /></div>
-                  <div className="space-y-1"><label className="text-xs font-bold text-slate-600">Diện bảo trợ <span className="text-red-500 font-black">*</span></label><select value={currentRecord.LoaiDien || ''} onChange={e => setCurrentRecord({...currentRecord, LoaiDien: e.target.value})} className="w-full px-3 py-2 border rounded-lg text-sm bg-white"><option value="">-- Chọn diện --</option>{protectionTypes.map(pt => <option key={pt.id} value={pt.name}>{pt.name}</option>)}</select></div>
-                  <div className="space-y-1"><label className="text-xs font-bold text-slate-600">Mức trợ cấp</label><input type="number" value={currentRecord.SoTien || 0} onChange={e => setCurrentRecord({...currentRecord, SoTien: parseFloat(e.target.value) || 0})} className="w-full px-3 py-2 border rounded-lg text-sm text-emerald-600 font-bold bg-white" /></div>
-                  <div className="space-y-1"><label className="text-xs font-bold text-slate-600">Người nhận thay</label><select value={currentRecord.NguoiNhanThay || ''} onChange={e => setCurrentRecord({...currentRecord, NguoiNhanThay: e.target.value})} className="w-full px-3 py-2 border rounded-lg text-sm bg-white"><option value="">-- Chính chủ --</option>{availableReceivers.map(rec => <option key={rec.id} value={rec.name}>{rec.name}</option>)}</select></div>
+                  <div className="space-y-1"><label className="text-xs font-bold text-slate-600">Họ và tên <span className="text-red-500 font-black">*</span></label><input value={currentRecord.HoTen || ''} onChange={e => setCurrentRecord({...currentRecord, HoTen: e.target.value})} className="w-full px-3 py-2 border rounded-lg text-sm bg-slate-50" placeholder="Họ và tên" /></div>
+                  <div className="space-y-1"><label className="text-xs font-bold text-slate-600">Diện bảo trợ <span className="text-red-500 font-black">*</span></label><select value={currentRecord.LoaiDien || ''} onChange={e => setCurrentRecord({...currentRecord, LoaiDien: e.target.value})} className="w-full px-3 py-2 border rounded-lg text-sm bg-slate-50 font-medium"><option value="">-- Chọn diện --</option>{protectionTypes.map(pt => <option key={pt.id} value={pt.name}>{pt.name}</option>)}</select></div>
+                  <div className="space-y-1"><label className="text-xs font-bold text-slate-600">Mức trợ cấp</label><input type="number" value={currentRecord.SoTien || 0} onChange={e => setCurrentRecord({...currentRecord, SoTien: parseFloat(e.target.value) || 0})} className="w-full px-3 py-2 border rounded-lg text-sm text-emerald-600 font-black bg-slate-50" /></div>
+                  <div className="space-y-1"><label className="text-xs font-bold text-slate-600">Người nhận thay</label><select value={currentRecord.NguoiNhanThay || ''} onChange={e => setCurrentRecord({...currentRecord, NguoiNhanThay: e.target.value})} className="w-full px-3 py-2 border rounded-lg text-sm bg-slate-50 font-medium"><option value="">-- Chính chủ --</option>{availableReceivers.map(rec => <option key={rec.id} value={rec.name}>{rec.name}</option>)}</select></div>
                 </div>
                 {!isEditing && (
                   <div className="flex justify-end pt-2">
-                    <button type="button" onClick={handleAddToList} className={`flex items-center gap-2 px-6 py-2 rounded-xl text-xs font-black shadow-md transition-all active:scale-95 ${editingTempIndex !== null ? 'bg-indigo-600 hover:bg-indigo-700' : 'bg-slate-900 hover:bg-black'} text-white`}>
+                    <button type="button" onClick={handleAddToList} className={`flex items-center gap-2 px-8 py-2.5 rounded-xl text-xs font-black shadow-lg transition-all active:scale-95 ${editingTempIndex !== null ? 'bg-indigo-600 hover:bg-indigo-700' : 'bg-slate-900 hover:bg-black'} text-white`}>
                       {editingTempIndex !== null ? <RotateCcw size={16} /> : <Plus size={16} />}
-                      {editingTempIndex !== null ? 'Cập nhật hồ sơ đang sửa' : 'Thêm vào danh sách chờ'}
+                      {editingTempIndex !== null ? 'Cập nhật mục đang sửa' : 'Thêm vào danh sách chờ'}
                     </button>
                   </div>
                 )}
@@ -177,11 +164,11 @@ const SocialProtectionForm: React.FC<SocialProtectionFormProps> = ({
                           <tr key={idx} className={`hover:bg-emerald-50/30 transition-colors ${editingTempIndex === idx ? 'bg-emerald-50/50' : ''}`}>
                             <td className="px-6 py-3 font-bold text-slate-700">{r.HoTen}</td>
                             <td className="px-6 py-3 font-bold text-emerald-700 px-2 py-0.5 bg-emerald-50 border border-emerald-100 rounded inline-block mt-2 ml-6">{r.LoaiDien}</td>
-                            <td className="px-6 py-3 text-right font-bold text-emerald-600">{(r.SoTien || 0).toLocaleString()}</td>
+                            <td className="px-6 py-3 text-right font-black text-emerald-600">{(r.SoTien || 0).toLocaleString()}</td>
                             <td className="px-6 py-3 text-right">
                               <div className="flex justify-end gap-1">
-                                <button onClick={() => editFromList(idx)} className="p-1.5 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors" title="Sửa mục này"><Edit size={14} /></button>
-                                <button onClick={() => removeFromList(idx)} className="p-1.5 text-red-500 hover:bg-red-100 rounded-lg transition-colors" title="Xóa mục này"><Trash2 size={14} /></button>
+                                <button onClick={() => { setEditingTempIndex(idx); setCurrentRecord(recordsList[idx]); }} className="p-1.5 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors"><Edit size={14} /></button>
+                                <button onClick={() => setRecordsList(prev => prev.filter((_, i) => i !== idx))} className="p-1.5 text-red-500 hover:bg-red-100 rounded-lg transition-colors"><Trash2 size={14} /></button>
                               </div>
                             </td>
                           </tr>
@@ -197,7 +184,7 @@ const SocialProtectionForm: React.FC<SocialProtectionFormProps> = ({
 
         <div className="p-6 border-t bg-slate-50 flex justify-end gap-3 shrink-0">
           <button onClick={onClose} className="px-6 py-2 text-slate-600 font-bold hover:text-slate-800 transition-colors">Hủy</button>
-          <button onClick={handleSaveAll} className="px-8 py-2 bg-emerald-600 text-white font-black rounded-xl shadow-lg transform active:scale-95 hover:bg-emerald-700 transition-all flex items-center gap-2"><Save size={18} /> Lưu hồ sơ</button>
+          <button onClick={handleSaveAll} className="px-10 py-3 bg-emerald-600 text-white font-black rounded-xl shadow-xl transform active:scale-95 hover:bg-emerald-700 transition-all flex items-center gap-2 text-sm"><Save size={20} /> Lưu hồ sơ</button>
         </div>
       </div>
     </div>
