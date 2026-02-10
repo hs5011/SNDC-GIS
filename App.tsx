@@ -57,7 +57,6 @@ const App: React.FC = () => {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingRecord, setEditingRecord] = useState<HouseNumberRecord | undefined>(undefined);
   
-  // Trạng thái cho Related Manager
   const [isRelatedManagerOpen, setIsRelatedManagerOpen] = useState(false);
   const [selectedHouseForRelated, setSelectedHouseForRelated] = useState<HouseNumberRecord | null>(null);
 
@@ -108,14 +107,12 @@ const App: React.FC = () => {
 
   const [activeFilter, setActiveFilter] = useState<'all' | 'active' | 'inactive'>('active');
 
-  // Helper to find house by ID
   const getHouseAddress = (houseId?: string) => {
     if (!houseId) return '';
     const house = records.find(h => h.id === houseId);
     return house ? `${house.SoNha} ${house.Duong}` : '';
   };
 
-  // Trạng thái cho tab Bản đồ
   const [mapLayers, setMapLayers] = useState({
     houses: true,
     publicLand: true,
@@ -240,14 +237,16 @@ const App: React.FC = () => {
   }, [socialProtections, searchTerm, activeFilter, records]);
 
   const filteredBanks = useMemo(() => {
-    return banks.filter(b => 
-      b.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      b.shortName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      b.code.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    return banks.filter(bank => {
+      const matchSearch = (
+        (bank.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (bank.shortName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (bank.code || '').toLowerCase().includes(searchTerm.toLowerCase())
+      );
+      return matchSearch;
+    });
   }, [banks, searchTerm]);
 
-  // Excel Export Utility
   const handleExportExcel = (tab: SidebarTab) => {
     let dataToExport: any[] = [];
     let headers: string[] = [];
@@ -290,7 +289,7 @@ const App: React.FC = () => {
       return;
     }
 
-    let csvContent = "\uFEFF"; // UTF-8 BOM
+    let csvContent = "\uFEFF"; 
     csvContent += headers.join(",") + "\n";
     dataToExport.forEach(row => {
       const sanitizedRow = row.map((val: any) => {
@@ -311,7 +310,6 @@ const App: React.FC = () => {
     document.body.removeChild(link);
   };
 
-  // House CRUD
   const handleAddOrEditHouse = (data: Partial<HouseNumberRecord>) => {
     if (editingRecord) {
       setRecords(prev => prev.map(r => r.id === editingRecord.id ? { ...r, ...data, UpdatedAt: new Date().toISOString() } as HouseNumberRecord : r));
@@ -326,7 +324,6 @@ const App: React.FC = () => {
         Status: 'Active'
       };
       setRecords(prev => [...prev, newRecord]);
-      // Tự động mở trình quản lý liên kết sau khi thêm mới
       setSelectedHouseForRelated(newRecord);
       setIsRelatedManagerOpen(true);
     }
@@ -340,11 +337,8 @@ const App: React.FC = () => {
     }
   };
 
-  // Logic Manager
   const handleAddRelated = (type: string) => {
     if (!selectedHouseForRelated) return;
-    const initialData = { LinkedHouseId: selectedHouseForRelated.id };
-    
     switch(type) {
       case 'general': setEditingGeneral(undefined); setIsGeneralFormOpen(true); break;
       case 'merit': setEditingMerit(undefined); setIsMeritFormOpen(true); break;
@@ -374,29 +368,11 @@ const App: React.FC = () => {
     }
   };
 
-  // Public Land CRUD
   const handleAddOrEditLand = (data: Partial<PublicLandRecord>) => {
     if (editingLand) {
       setPublicLands(prev => prev.map(l => l.id === editingLand.id ? { ...l, ...data } as PublicLandRecord : l));
     } else {
       const newRecord: PublicLandRecord = {
-        Bieu: '',
-        Donviquanl: '',
-        Donvisudun: '',
-        Thua: '',
-        To: '',
-        Phuong: '',
-        Dientich: 0,
-        Hientrang: '',
-        Nguongoc: '',
-        Noidungxul: '',
-        Vanbanxuly: '',
-        Thongtin: '',
-        Vanbanphed: '',
-        Ghichu: '',
-        X: 10.7719,
-        Y: 106.6983,
-        geometry: [],
         ...data,
         id: Math.random().toString(36).substr(2, 9),
         CreatedAt: new Date().toISOString(),
@@ -415,7 +391,6 @@ const App: React.FC = () => {
     }
   };
 
-  // General CRUD
   const handleAddOrEditGeneral = (dataList: Partial<GeneralRecord>[]) => {
     if (editingGeneral) {
       const data = dataList[0];
@@ -440,7 +415,6 @@ const App: React.FC = () => {
     }
   };
 
-  // Merit CRUD
   const handleAddOrEditMerit = (dataList: Partial<MeritRecord>[]) => {
     if (editingMerit) {
       const data = dataList[0];
@@ -465,7 +439,6 @@ const App: React.FC = () => {
     }
   };
 
-  // Medal CRUD
   const handleAddOrEditMedal = (dataList: Partial<MedalRecord>[]) => {
     if (editingMedal) {
       const data = dataList[0];
@@ -490,7 +463,6 @@ const App: React.FC = () => {
     }
   };
 
-  // Policy CRUD
   const handleAddOrEditPolicy = (dataList: Partial<PolicyRecord>[]) => {
     if (editingPolicy) {
       const data = dataList[0];
@@ -515,7 +487,6 @@ const App: React.FC = () => {
     }
   };
 
-  // Social CRUD
   const handleAddOrEditSocial = (dataList: Partial<SocialProtectionRecord>[]) => {
     if (editingSocial) {
       const data = dataList[0];
@@ -1287,6 +1258,106 @@ const App: React.FC = () => {
             </div>
           </div>
         );
+      case 'general_statuses':
+        return (
+          <div className="flex-1 p-6 flex flex-col gap-6">
+            <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2"><Info className="text-slate-600" /> Quản lý danh mục Tình trạng tướng lĩnh</h2>
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+              <table className="w-full text-left">
+                <thead className="bg-slate-50 border-b">
+                  <tr className="text-[10px] font-bold uppercase text-slate-400"><th className="px-6 py-4">Mã</th><th className="px-6 py-4">Tên tình trạng</th><th className="px-6 py-4 text-right">Thao tác</th></tr>
+                </thead>
+                <tbody className="divide-y">
+                  {generalStatuses.filter(s => s.name.toLowerCase().includes(searchTerm.toLowerCase()) || s.code.toLowerCase().includes(searchTerm.toLowerCase())).map(st => (
+                    <tr key={st.id} className="hover:bg-slate-50">
+                      <td className="px-6 py-4 font-mono text-xs text-slate-500">{st.code}</td>
+                      <td className="px-6 py-4 text-sm font-semibold text-slate-700">{st.name}</td>
+                      <td className="px-6 py-4 text-right">
+                        <button onClick={() => { setEditingGs(st); setIsGsFormOpen(true); }} className="p-1.5 hover:bg-slate-100 text-slate-600 rounded-lg"><Edit size={14} /></button>
+                        <button onClick={() => handleDeleteGs(st.id)} className="p-1.5 hover:bg-red-100 text-red-600 rounded-lg ml-2"><Trash2 size={14} /></button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        );
+      case 'merit_types':
+        return (
+          <div className="flex-1 p-6 flex flex-col gap-6">
+            <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2"><Heart className="text-rose-600" /> Quản lý danh mục Loại đối tượng NCC</h2>
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+              <table className="w-full text-left">
+                <thead className="bg-slate-50 border-b">
+                  <tr className="text-[10px] font-bold uppercase text-slate-400"><th className="px-6 py-4">Mã</th><th className="px-6 py-4">Tên loại đối tượng</th><th className="px-6 py-4 text-right">Thao tác</th></tr>
+                </thead>
+                <tbody className="divide-y">
+                  {meritTypes.filter(m => m.name.toLowerCase().includes(searchTerm.toLowerCase()) || m.code.toLowerCase().includes(searchTerm.toLowerCase())).map(mt => (
+                    <tr key={mt.id} className="hover:bg-rose-50">
+                      <td className="px-6 py-4 font-mono text-xs text-rose-500">{mt.code}</td>
+                      <td className="px-6 py-4 text-sm font-semibold text-slate-700">{mt.name}</td>
+                      <td className="px-6 py-4 text-right">
+                        <button onClick={() => { setEditingMt(mt); setIsMtFormOpen(true); }} className="p-1.5 hover:bg-rose-100 text-rose-600 rounded-lg"><Edit size={14} /></button>
+                        <button onClick={() => handleDeleteMt(mt.id)} className="p-1.5 hover:bg-red-100 text-red-600 rounded-lg ml-2"><Trash2 size={14} /></button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        );
+      case 'medal_types':
+        return (
+          <div className="flex-1 p-6 flex flex-col gap-6">
+            <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2"><Award className="text-amber-600" /> Quản lý danh mục Loại huân chương</h2>
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+              <table className="w-full text-left">
+                <thead className="bg-slate-50 border-b">
+                  <tr className="text-[10px] font-bold uppercase text-slate-400"><th className="px-6 py-4">Mã</th><th className="px-6 py-4">Tên loại huân chương/huy chương</th><th className="px-6 py-4 text-right">Thao tác</th></tr>
+                </thead>
+                <tbody className="divide-y">
+                  {medalTypes.filter(m => m.name.toLowerCase().includes(searchTerm.toLowerCase()) || m.code.toLowerCase().includes(searchTerm.toLowerCase())).map(md => (
+                    <tr key={md.id} className="hover:bg-amber-50">
+                      <td className="px-6 py-4 font-mono text-xs text-amber-600">{md.code}</td>
+                      <td className="px-6 py-4 text-sm font-semibold text-slate-700">{md.name}</td>
+                      <td className="px-6 py-4 text-right">
+                        <button onClick={() => { setEditingMdt(md); setIsMdtFormOpen(true); }} className="p-1.5 hover:bg-amber-100 text-amber-600 rounded-lg"><Edit size={14} /></button>
+                        <button onClick={() => handleDeleteMdt(md.id)} className="p-1.5 hover:bg-red-100 text-red-600 rounded-lg ml-2"><Trash2 size={14} /></button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        );
+      case 'policy_types':
+        return (
+          <div className="flex-1 p-6 flex flex-col gap-6">
+            <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2"><ShieldCheck className="text-indigo-600" /> Quản lý danh mục Loại diện chính sách</h2>
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+              <table className="w-full text-left">
+                <thead className="bg-slate-50 border-b">
+                  <tr className="text-[10px] font-bold uppercase text-slate-400"><th className="px-6 py-4">Mã</th><th className="px-6 py-4">Tên diện chính sách</th><th className="px-6 py-4 text-right">Thao tác</th></tr>
+                </thead>
+                <tbody className="divide-y">
+                  {policyTypes.filter(p => p.name.toLowerCase().includes(searchTerm.toLowerCase()) || p.code.toLowerCase().includes(searchTerm.toLowerCase())).map(pt => (
+                    <tr key={pt.id} className="hover:bg-indigo-50">
+                      <td className="px-6 py-4 font-mono text-xs text-indigo-500">{pt.code}</td>
+                      <td className="px-6 py-4 text-sm font-semibold text-slate-700">{pt.name}</td>
+                      <td className="px-6 py-4 text-right">
+                        <button onClick={() => { setEditingPt(pt); setIsPtFormOpen(true); }} className="p-1.5 hover:bg-indigo-100 text-indigo-600 rounded-lg"><Edit size={14} /></button>
+                        <button onClick={() => handleDeletePt(pt.id)} className="p-1.5 hover:bg-red-100 text-red-600 rounded-lg ml-2"><Trash2 size={14} /></button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        );
       case 'streets':
         return (
           <div className="flex-1 p-6 flex flex-col gap-6">
@@ -1297,7 +1368,7 @@ const App: React.FC = () => {
                   <tr className="text-[10px] font-bold uppercase text-slate-400"><th className="px-6 py-4">Mã đường</th><th className="px-6 py-4">Tên đường</th><th className="px-6 py-4 text-right">Thao tác</th></tr>
                 </thead>
                 <tbody className="divide-y">
-                  {streets.map(st => (
+                  {streets.filter(s => s.name.toLowerCase().includes(searchTerm.toLowerCase()) || s.code.toLowerCase().includes(searchTerm.toLowerCase())).map(st => (
                     <tr key={st.id} className="hover:bg-slate-50">
                       <td className="px-6 py-4 font-mono text-xs text-blue-600">{st.code}</td>
                       <td className="px-6 py-4 text-sm font-semibold text-slate-700">{st.name}</td>
@@ -1322,7 +1393,7 @@ const App: React.FC = () => {
                   <tr className="text-[10px] font-bold uppercase text-slate-400"><th className="px-6 py-4">Mã diện</th><th className="px-6 py-4">Tên diện bảo trợ xã hội</th><th className="px-6 py-4 text-right">Thao tác</th></tr>
                 </thead>
                 <tbody className="divide-y">
-                  {socialProtectionTypes.map(spt => (
+                  {socialProtectionTypes.filter(s => s.name.toLowerCase().includes(searchTerm.toLowerCase()) || s.code.toLowerCase().includes(searchTerm.toLowerCase())).map(spt => (
                     <tr key={spt.id} className="hover:bg-emerald-50">
                       <td className="px-6 py-4 font-mono text-xs text-emerald-600">{spt.code}</td>
                       <td className="px-6 py-4 text-sm font-semibold text-slate-700">{spt.name}</td>
@@ -1347,7 +1418,7 @@ const App: React.FC = () => {
                   <tr className="text-[10px] font-bold uppercase text-slate-400"><th className="px-6 py-4">Mã</th><th className="px-6 py-4">Tên mối quan hệ với chủ hộ</th><th className="px-6 py-4 text-right">Thao tác</th></tr>
                 </thead>
                 <tbody className="divide-y">
-                  {relationships.map(rel => (
+                  {relationships.filter(r => r.name.toLowerCase().includes(searchTerm.toLowerCase()) || r.code.toLowerCase().includes(searchTerm.toLowerCase())).map(rel => (
                     <tr key={rel.id} className="hover:bg-slate-50">
                       <td className="px-6 py-4 font-mono text-xs text-pink-600">{rel.code}</td>
                       <td className="px-6 py-4 text-sm font-semibold text-slate-700">{rel.name}</td>
@@ -1382,7 +1453,7 @@ const App: React.FC = () => {
                     <tr className="text-[10px] font-bold uppercase text-slate-400"><th className="px-6 py-4">Tên khu phố MỚI</th><th className="px-6 py-4">Tên khu phố CŨ</th><th className="px-6 py-4">Ranh giới</th><th className="px-6 py-4 text-right">Thao tác</th></tr>
                   </thead>
                   <tbody className="divide-y">
-                    {neighborhoods.map(nb => (
+                    {neighborhoods.filter(n => n.nameNew.toLowerCase().includes(searchTerm.toLowerCase()) || n.nameOld.toLowerCase().includes(searchTerm.toLowerCase())).map(nb => (
                       <tr key={nb.id} className="hover:bg-slate-50">
                         <td className="px-6 py-4 text-sm font-semibold text-slate-700">{nb.nameNew}</td>
                         <td className="px-6 py-4 text-sm text-slate-500">{nb.nameOld}</td>
@@ -1483,7 +1554,7 @@ const App: React.FC = () => {
                         />
                         <LayerToggle 
                           active={mapLayers.publicLand} 
-                          onClick={() => setMapLayers({...mapLayers, neighborhoods: !mapLayers.neighborhoods})} 
+                          onClick={() => setMapLayers({...mapLayers, publicLand: !mapLayers.publicLand})} 
                           label="Quản lý Đất công" 
                           icon={<Landmark size={14} className="text-amber-500" />} 
                         />
@@ -1548,7 +1619,7 @@ const App: React.FC = () => {
         <header className="h-16 bg-white border-b flex items-center justify-between px-6 shrink-0 z-20 shadow-sm">
           <div className="flex items-center gap-3 bg-slate-100 px-4 py-1.5 rounded-xl w-72 max-md:hidden border">
             <Search size={18} className="text-slate-400" />
-            <input type="text" placeholder="Tìm tên chủ hộ, số nhà, đường..." className="bg-transparent border-none outline-none text-sm w-full font-medium" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
+            <input type="text" placeholder="Tìm kiếm nhanh..." className="bg-transparent border-none outline-none text-sm w-full font-medium" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
           </div>
           <div className="flex items-center gap-3 ml-auto">
             {renderHeaderButton()}
@@ -1557,7 +1628,6 @@ const App: React.FC = () => {
         <main className="flex-1 flex flex-col overflow-hidden">{renderContent()}</main>
       </div>
 
-      {/* Modals */}
       {isFormOpen && (
         <HouseForm 
           onClose={() => { setIsFormOpen(false); setEditingRecord(undefined); }} 
@@ -1570,7 +1640,6 @@ const App: React.FC = () => {
         />
       )}
 
-      {/* Trình quản lý đối tượng liên kết */}
       {isRelatedManagerOpen && selectedHouseForRelated && (
         <RelatedRecordsManager 
           house={selectedHouseForRelated}
@@ -1587,7 +1656,7 @@ const App: React.FC = () => {
       )}
 
       {isLandFormOpen && (
-        <PublicLandForm onClose={() => { setIsLandFormOpen(false); setEditingLand(undefined); }} onSubmit={handleAddOrEditHouse} initialData={editingLand} isEditing={!!editingLand} houseRecords={records} />
+        <PublicLandForm onClose={() => { setIsLandFormOpen(false); setEditingLand(undefined); }} onSubmit={handleAddOrEditLand} initialData={editingLand} isEditing={!!editingLand} houseRecords={records} />
       )}
       {isGeneralFormOpen && (
         <GeneralForm 

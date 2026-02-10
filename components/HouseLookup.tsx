@@ -26,11 +26,14 @@ const HouseLookup: React.FC<HouseLookupProps> = ({
   const [selectedHouseId, setSelectedHouseId] = useState<string | null>(null);
 
   const filteredHouses = useMemo(() => {
-    if (!searchTerm.trim()) return [];
+    const s = searchTerm.toLowerCase().trim();
+    if (!s) return [];
     return houses.filter(h => 
-      (h.SoNha || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (h.Duong || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (h.TenChuHo || '').toLowerCase().includes(searchTerm.toLowerCase())
+      (h.SoNha || '').toLowerCase().includes(s) ||
+      (h.Duong || '').toLowerCase().includes(s) ||
+      (`${h.SoNha} ${h.Duong}`).toLowerCase().includes(s) ||
+      (h.TenChuHo || '').toLowerCase().includes(s) ||
+      (h.SoCCCD || '').includes(s)
     ).slice(0, 10);
   }, [searchTerm, houses]);
 
@@ -61,7 +64,7 @@ const HouseLookup: React.FC<HouseLookupProps> = ({
             <Home size={20} className="text-slate-400" />
             <input 
               type="text" 
-              placeholder="Nhập số nhà, tên đường hoặc tên chủ hộ để tìm kiếm..." 
+              placeholder="Nhập số nhà, tên đường, tên chủ hộ hoặc CCCD..." 
               className="bg-transparent border-none outline-none text-sm w-full font-medium"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -69,18 +72,18 @@ const HouseLookup: React.FC<HouseLookupProps> = ({
           </div>
 
           {searchTerm && !selectedHouseId && filteredHouses.length > 0 && (
-            <div className="absolute top-full left-0 right-0 z-30 mt-2 bg-white border rounded-xl shadow-xl overflow-hidden divide-y">
+            <div className="absolute top-full left-0 right-0 z-30 mt-2 bg-white border rounded-xl shadow-2xl overflow-hidden divide-y">
               {filteredHouses.map(h => (
                 <button 
                   key={h.id}
                   onClick={() => { setSelectedHouseId(h.id); setSearchTerm(''); }}
-                  className="w-full text-left px-5 py-3 hover:bg-blue-50 flex items-center justify-between group"
+                  className="w-full text-left px-5 py-4 hover:bg-blue-50 transition-colors flex items-center justify-between group"
                 >
                   <div>
-                    <p className="text-sm font-bold text-slate-800">SN {h.SoNha} {h.Duong}</p>
-                    <p className="text-xs text-slate-500">Chủ hộ: {h.TenChuHo} | CCCD: {h.SoCCCD}</p>
+                    <div className="text-sm font-bold text-slate-800">SN {h.SoNha} {h.Duong}</div>
+                    <div className="text-xs text-slate-500 font-medium">Chủ hộ: {h.TenChuHo} | CCCD: {h.SoCCCD}</div>
                   </div>
-                  <ChevronRight size={18} className="text-slate-300 group-hover:text-blue-600 transition-colors" />
+                  <ChevronRight size={20} className="text-slate-300 group-hover:text-blue-600 transition-colors" />
                 </button>
               ))}
             </div>
@@ -102,12 +105,13 @@ const HouseLookup: React.FC<HouseLookupProps> = ({
                   <div className="flex items-center gap-4 mt-1 opacity-90 text-sm font-medium">
                     <span className="flex items-center gap-1"><Users size={14} /> Chủ hộ: {selectedHouse.TenChuHo}</span>
                     <span className="flex items-center gap-1"><MapPin size={14} /> {selectedHouse.KDC}</span>
+                    <span className="px-2 py-0.5 bg-white/20 rounded font-mono text-xs">CCCD: {selectedHouse.SoCCCD}</span>
                   </div>
                 </div>
               </div>
               <button 
                 onClick={() => setSelectedHouseId(null)}
-                className="px-4 py-1.5 bg-white/20 hover:bg-white/30 rounded-lg text-xs font-bold transition-all"
+                className="px-4 py-1.5 bg-white/20 hover:bg-white/30 rounded-lg text-xs font-bold transition-all border border-white/20"
               >
                 Chọn số nhà khác
               </button>
@@ -134,10 +138,10 @@ const HouseLookup: React.FC<HouseLookupProps> = ({
         </div>
       ) : (
         <div className="flex-1 flex flex-col items-center justify-center opacity-40 italic py-20">
-          <div className="p-8 rounded-full bg-slate-200 mb-4">
-            <Search size={64} />
+          <div className="p-8 rounded-full bg-slate-200 mb-4 shadow-inner">
+            <Search size={64} className="text-slate-400" />
           </div>
-          <p className="text-lg font-medium">Vui lòng tìm kiếm và chọn một số nhà để xem dữ liệu tổng hợp</p>
+          <p className="text-lg font-medium text-slate-600">Vui lòng nhập tìm kiếm và chọn một căn hộ để tra cứu thông tin chi tiết</p>
         </div>
       )}
     </div>

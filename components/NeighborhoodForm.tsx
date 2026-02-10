@@ -22,8 +22,16 @@ const NeighborhoodForm: React.FC<NeighborhoodFormProps> = ({ initialData, onSubm
   const [activeTab, setActiveTab] = useState<NeighborhoodTab>('Info');
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSave = () => {
+    const errors: string[] = [];
+    if (!formData.nameNew?.trim()) errors.push("Tên khu phố mới");
+    if (!formData.nameOld?.trim()) errors.push("Tên khu phố cũ (hoặc Ghi chú cũ)");
+
+    if (errors.length > 0) {
+      alert("CẢNH BÁO: Vui lòng nhập đầy đủ thông tin:\n- " + errors.join("\n- "));
+      setActiveTab('Info');
+      return;
+    }
     onSubmit(formData);
   };
 
@@ -56,24 +64,24 @@ const NeighborhoodForm: React.FC<NeighborhoodFormProps> = ({ initialData, onSubm
   return (
     <>
       <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
-          <div className="flex items-center justify-between p-6 border-b">
+        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col border border-slate-200">
+          <div className="flex items-center justify-between p-6 border-b bg-slate-50">
             <h2 className="text-xl font-bold text-slate-900">
               {initialData ? 'Sửa ranh giới khu phố' : 'Thêm khu phố mới'}
             </h2>
-            <button onClick={onClose} className="p-2 hover:bg-slate-100 rounded-full transition-colors"><X size={20} /></button>
+            <button onClick={onClose} className="p-2 hover:bg-slate-200 rounded-full transition-colors"><X size={20} /></button>
           </div>
 
           <div className="flex bg-slate-50 px-6 gap-6 border-b">
             <button 
               onClick={() => setActiveTab('Info')}
-              className={`flex items-center gap-2 py-4 border-b-2 font-medium text-sm transition-all ${activeTab === 'Info' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-700'}`}
+              className={`flex items-center gap-2 py-4 border-b-2 font-bold text-sm transition-all ${activeTab === 'Info' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-500'}`}
             >
               <Info size={18} /> Thông tin chung
             </button>
             <button 
               onClick={() => setActiveTab('Boundary')}
-              className={`flex items-center gap-2 py-4 border-b-2 font-medium text-sm transition-all ${activeTab === 'Boundary' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-700'}`}
+              className={`flex items-center gap-2 py-4 border-b-2 font-bold text-sm transition-all ${activeTab === 'Boundary' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-500'}`}
             >
               <MapPin size={18} /> Vẽ ranh giới vùng
             </button>
@@ -83,23 +91,21 @@ const NeighborhoodForm: React.FC<NeighborhoodFormProps> = ({ initialData, onSubm
             {activeTab === 'Info' ? (
               <div className="space-y-4 max-w-md mx-auto">
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-slate-700">Tên khu phố MỚI</label>
+                  <label className="text-sm font-bold text-slate-700">Tên khu phố MỚI <span className="text-red-500">*</span></label>
                   <input 
                     value={formData.nameNew} 
                     onChange={e => setFormData({...formData, nameNew: e.target.value})} 
-                    className="w-full px-3 py-2 border rounded-lg outline-none focus:ring-2 focus:ring-blue-500"
+                    className={`w-full px-3 py-2 border rounded-lg outline-none focus:ring-2 focus:ring-blue-500 ${!formData.nameNew?.trim() ? 'border-red-200 bg-red-50/30' : ''}`}
                     placeholder="VD: Khu phố 1"
-                    required
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-slate-700">Tên khu phố CŨ</label>
+                  <label className="text-sm font-bold text-slate-700">Tên khu phố CŨ <span className="text-red-500">*</span></label>
                   <input 
                     value={formData.nameOld} 
                     onChange={e => setFormData({...formData, nameOld: e.target.value})} 
-                    className="w-full px-3 py-2 border rounded-lg outline-none focus:ring-2 focus:ring-blue-500"
+                    className={`w-full px-3 py-2 border rounded-lg outline-none focus:ring-2 focus:ring-blue-500 ${!formData.nameOld?.trim() ? 'border-red-200 bg-red-50/30' : ''}`}
                     placeholder="VD: Tổ dân phố 10"
-                    required
                   />
                 </div>
               </div>
@@ -137,11 +143,11 @@ const NeighborhoodForm: React.FC<NeighborhoodFormProps> = ({ initialData, onSubm
           </div>
 
           <div className="p-6 border-t bg-slate-50 flex justify-end gap-3">
-            <button type="button" onClick={onClose} className="px-4 py-2 text-slate-600 font-medium">Hủy</button>
+            <button type="button" onClick={onClose} className="px-4 py-2 text-slate-600 font-bold">Hủy bỏ</button>
             <button 
               type="button" 
-              onClick={handleSubmit} 
-              className="px-6 py-2 bg-blue-600 text-white font-bold rounded-lg flex items-center gap-2"
+              onClick={handleSave} 
+              className="px-8 py-2 bg-blue-600 text-white font-black rounded-xl flex items-center gap-2 shadow-lg hover:bg-blue-700 transform active:scale-95 transition-all"
             >
               <Save size={18} /> Lưu khu phố
             </button>

@@ -15,6 +15,18 @@ const WardBoundaryForm: React.FC<WardBoundaryFormProps> = ({ initialData, onSubm
   const [formData, setFormData] = useState<WardBoundary>(initialData);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
 
+  const handleSave = () => {
+    if (!formData.name?.trim()) {
+      alert("CẢNH BÁO: Vui lòng nhập Tên đơn vị hành chính!");
+      return;
+    }
+    if (!formData.geometry || formData.geometry.length < 3) {
+      alert("CẢNH BÁO: Vui lòng vẽ ranh giới trên bản đồ (tối thiểu 3 điểm)!");
+      return;
+    }
+    onSubmit(formData);
+  };
+
   const handleLocationSelect = (lat: number, lng: number) => {
     const newPoints = [...(formData.geometry || []), [lat, lng] as [number, number]];
     if (newPoints.length === 1) {
@@ -38,13 +50,15 @@ const WardBoundaryForm: React.FC<WardBoundaryFormProps> = ({ initialData, onSubm
   };
 
   const clearGeometry = () => {
-    setFormData(prev => ({ ...prev, geometry: [] }));
+    if (window.confirm("Xóa toàn bộ ranh giới hiện tại?")) {
+      setFormData(prev => ({ ...prev, geometry: [] }));
+    }
   };
 
   return (
     <>
       <div className="flex flex-col h-full gap-6">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between shrink-0">
           <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
             <Globe className="text-blue-600" /> Quản lý ranh giới Phường
           </h2>
@@ -56,8 +70,8 @@ const WardBoundaryForm: React.FC<WardBoundaryFormProps> = ({ initialData, onSubm
               <FileSpreadsheet size={18} /> Nhập Excel
             </button>
             <button 
-              onClick={() => onSubmit(formData)}
-              className="flex items-center gap-2 px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold shadow-lg transition-all"
+              onClick={handleSave}
+              className="flex items-center gap-2 px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-black shadow-lg transition-all transform active:scale-95"
             >
               <Save size={18} /> Lưu ranh giới
             </button>
@@ -68,23 +82,23 @@ const WardBoundaryForm: React.FC<WardBoundaryFormProps> = ({ initialData, onSubm
           <div className="lg:col-span-1 space-y-4 overflow-y-auto pr-2 custom-scrollbar">
             <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-4">
               <div className="space-y-2">
-                <label className="text-xs font-bold text-slate-400 uppercase tracking-widest">Tên đơn vị hành chính</label>
+                <label className="text-xs font-bold text-slate-700 uppercase tracking-widest">Tên đơn vị hành chính <span className="text-red-500">*</span></label>
                 <input 
                   value={formData.name} 
                   onChange={e => setFormData({...formData, name: e.target.value})}
-                  className="w-full px-3 py-2 border rounded-lg outline-none focus:ring-2 focus:ring-blue-500 font-semibold"
+                  className={`w-full px-3 py-2 border rounded-lg outline-none focus:ring-2 focus:ring-blue-500 font-semibold ${!formData.name?.trim() ? 'border-red-200 bg-red-50/30' : ''}`}
                 />
               </div>
               <div className="p-3 bg-blue-50 rounded-xl border border-blue-100">
-                <p className="text-[10px] text-blue-600 font-bold uppercase mb-1">Hướng dẫn</p>
-                <p className="text-[11px] text-blue-700 leading-relaxed">
-                  Click trực tiếp trên bản đồ để xác định các điểm mốc ranh giới của phường.
+                <p className="text-[10px] text-blue-600 font-black uppercase mb-1">Hướng dẫn vẽ</p>
+                <p className="text-[11px] text-blue-700 leading-relaxed font-medium">
+                  Click trực tiếp trên bản đồ để xác định các điểm mốc ranh giới của phường. Cần ít nhất 3 điểm để tạo vùng.
                 </p>
               </div>
-              <div className="flex flex-col gap-2">
+              <div className="flex flex-col gap-2 pt-2 border-t">
                 <div className="flex justify-between text-xs font-bold text-slate-500">
                   <span>Số điểm mốc:</span>
-                  <span className="text-blue-600">{formData.geometry?.length || 0}</span>
+                  <span className="text-blue-600 font-black">{formData.geometry?.length || 0}</span>
                 </div>
                 <button 
                   onClick={undoPoint}

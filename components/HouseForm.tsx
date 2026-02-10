@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { HouseNumberRecord, FormTab, Street, Neighborhood, FamilyMember, RelationshipType } from '../types';
-import { X, Save, User, MapPin, FileText, Settings, Navigation, Plus, Trash2, Heart, HeartOff, Users, Edit } from 'lucide-react';
+import { X, Save, User, MapPin, FileText, Settings, Navigation, Plus, Trash2, Heart, HeartOff, Users, Edit, AlertTriangle } from 'lucide-react';
 import MapView from './MapView';
 
 interface HouseFormProps {
@@ -54,14 +54,35 @@ const HouseForm: React.FC<HouseFormProps> = ({
     setFormData(prev => ({ ...prev, X: lat, Y: lng }));
   };
 
+  const validate = () => {
+    const errors: string[] = [];
+    if (!formData.TenChuHo?.trim()) errors.push("Tên chủ hộ");
+    if (!formData.SoCCCD?.trim()) errors.push("Số CCCD chủ hộ");
+    if (!formData.Duong) errors.push("Tên đường");
+    if (!formData.KDC) errors.push("Khu phố/Tổ dân phố");
+
+    if (errors.length > 0) {
+      alert("CẢNH BÁO: Vui lòng nhập đầy đủ các thông tin bắt buộc sau:\n- " + errors.join("\n- "));
+      if (!formData.TenChuHo || !formData.SoCCCD) setActiveTab('Owner');
+      else if (!formData.Duong || !formData.KDC) setActiveTab('Address');
+      return false;
+    }
+    return true;
+  };
+
+  const handleSave = () => {
+    if (validate()) {
+      onSubmit(formData);
+    }
+  };
+
   const addFamilyMember = () => {
     if (!newMember.HoTen || !newMember.QuanHe) {
-      alert('Vui lòng nhập Họ tên và chọn Mối quan hệ.');
+      alert('Vui lòng nhập Họ tên và chọn Mối quan hệ của thành viên gia đình.');
       return;
     }
 
     if (editingMemberId) {
-      // Cập nhật thành viên đang sửa
       setFormData(prev => ({
         ...prev,
         QuanHeChuHo: (prev.QuanHeChuHo || []).map(m => 
@@ -70,7 +91,6 @@ const HouseForm: React.FC<HouseFormProps> = ({
       }));
       setEditingMemberId(null);
     } else {
-      // Thêm mới
       const memberWithId: FamilyMember = {
         ...newMember,
         id: Math.random().toString(36).substr(2, 9)
@@ -121,12 +141,12 @@ const HouseForm: React.FC<HouseFormProps> = ({
           <div className="space-y-8">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <label className="text-sm font-bold text-slate-700">Tên chủ hộ <span className="text-red-500">*</span></label>
-                <input name="TenChuHo" value={formData.TenChuHo || ''} onChange={handleChange} className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" required />
+                <label className="text-sm font-bold text-slate-700">Tên chủ hộ <span className="text-red-500 font-black">*</span></label>
+                <input name="TenChuHo" value={formData.TenChuHo || ''} onChange={handleChange} className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none ${!formData.TenChuHo ? 'border-red-200 bg-red-50/30' : ''}`} placeholder="Nguyễn Văn A" />
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-bold text-slate-700">Số CCCD <span className="text-red-500">*</span></label>
-                <input name="SoCCCD" value={formData.SoCCCD || ''} onChange={handleChange} className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" required />
+                <label className="text-sm font-bold text-slate-700">Số CCCD <span className="text-red-500 font-black">*</span></label>
+                <input name="SoCCCD" value={formData.SoCCCD || ''} onChange={handleChange} className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none ${!formData.SoCCCD ? 'border-red-200 bg-red-50/30' : ''}`} placeholder="Số căn cước công dân" />
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-medium text-slate-700">Giới tính</label>
@@ -140,28 +160,20 @@ const HouseForm: React.FC<HouseFormProps> = ({
                 <label className="text-sm font-medium text-slate-700">Điện thoại</label>
                 <input name="DienThoaiC" value={formData.DienThoaiC || ''} onChange={handleChange} className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
               </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-slate-700">Ngày sinh</label>
-                <input type="date" name="NgaySinhCh" value={formData.NgaySinhCh || ''} onChange={handleChange} className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-slate-700">Quốc tịch</label>
-                <input name="QuocTich" value={formData.QuocTich || ''} onChange={handleChange} className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
-              </div>
             </div>
 
             <div className="space-y-4 border-t pt-6">
               <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest flex items-center gap-2">
-                <Users size={16} className="text-blue-600" /> Danh sách người liên quan / Thành viên gia đình
+                <Users size={16} className="text-blue-600" /> Thành viên gia đình (Tùy chọn)
               </h3>
               
-              <div className={`p-4 rounded-xl border border-dashed transition-all ${editingMemberId ? 'bg-orange-50 border-orange-300 ring-1 ring-orange-200' : 'bg-slate-50 border-slate-300'} grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3`}>
+              <div className={`p-4 rounded-xl border border-dashed transition-all ${editingMemberId ? 'bg-orange-50 border-orange-300' : 'bg-slate-50 border-slate-300'} grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3`}>
                 <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-slate-500 uppercase">Họ tên</label>
-                  <input value={newMember.HoTen} onChange={e => setNewMember({...newMember, HoTen: e.target.value})} className="w-full px-2 py-1.5 text-sm border rounded-md" placeholder="Nguyễn Văn B" />
+                  <label className="text-[10px] font-bold text-slate-500 uppercase">Họ tên thành viên</label>
+                  <input value={newMember.HoTen} onChange={e => setNewMember({...newMember, HoTen: e.target.value})} className="w-full px-2 py-1.5 text-sm border rounded-md" placeholder="Họ và tên" />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-slate-500 uppercase">Quan hệ với chủ hộ</label>
+                  <label className="text-[10px] font-bold text-slate-500 uppercase">Quan hệ</label>
                   <select 
                     value={newMember.QuanHe} 
                     onChange={e => setNewMember({...newMember, QuanHe: e.target.value})} 
@@ -169,22 +181,6 @@ const HouseForm: React.FC<HouseFormProps> = ({
                   >
                     <option value="">-- Chọn quan hệ --</option>
                     {relationshipTypes.map(rel => <option key={rel.id} value={rel.name}>{rel.name}</option>)}
-                  </select>
-                </div>
-                <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-slate-500 uppercase">CCCD</label>
-                  <input value={newMember.SoCCCD} onChange={e => setNewMember({...newMember, SoCCCD: e.target.value})} className="w-full px-2 py-1.5 text-sm border rounded-md" placeholder="Số định danh" />
-                </div>
-                <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-slate-500 uppercase">Ngày sinh</label>
-                  <input type="date" value={newMember.NgaySinh} onChange={e => setNewMember({...newMember, NgaySinh: e.target.value})} className="w-full px-2 py-1.5 text-sm border rounded-md" />
-                </div>
-                <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-slate-500 uppercase">Giới tính</label>
-                  <select value={newMember.GioiTinh} onChange={e => setNewMember({...newMember, GioiTinh: e.target.value as any})} className="w-full px-2 py-1.5 text-sm border rounded-md">
-                    <option value="Nam">Nam</option>
-                    <option value="Nữ">Nữ</option>
-                    <option value="Khác">Khác</option>
                   </select>
                 </div>
                 <div className="space-y-1">
@@ -196,13 +192,10 @@ const HouseForm: React.FC<HouseFormProps> = ({
                 </div>
                 <div className="col-span-full flex justify-end pt-2 gap-2">
                   {editingMemberId && (
-                    <button type="button" onClick={() => { setEditingMemberId(null); setNewMember({HoTen: '', QuanHe: '', NgaySinh: '', GioiTinh: 'Nam', SoCCCD: '', TrangThai: 'Còn sống'}); }} className="px-4 py-2 text-xs font-bold text-slate-500 hover:bg-slate-100 rounded-lg">
-                      Hủy bỏ sửa
-                    </button>
+                    <button type="button" onClick={() => { setEditingMemberId(null); setNewMember({HoTen: '', QuanHe: '', NgaySinh: '', GioiTinh: 'Nam', SoCCCD: '', TrangThai: 'Còn sống'}); }} className="px-4 py-2 text-xs font-bold text-slate-500 hover:bg-slate-100 rounded-lg">Hủy</button>
                   )}
-                  <button type="button" onClick={addFamilyMember} className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-colors shadow-sm ${editingMemberId ? 'bg-orange-600 hover:bg-orange-700 text-white' : 'bg-blue-600 text-white hover:bg-blue-700'}`}>
-                    {editingMemberId ? <Save size={14} /> : <Plus size={14} />} 
-                    {editingMemberId ? 'Cập nhật thành viên' : 'Thêm vào danh sách'}
+                  <button type="button" onClick={addFamilyMember} className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-colors ${editingMemberId ? 'bg-orange-600 text-white' : 'bg-blue-600 text-white'}`}>
+                    {editingMemberId ? <Save size={14} /> : <Plus size={14} />} {editingMemberId ? 'Cập nhật' : 'Thêm thành viên'}
                   </button>
                 </div>
               </div>
@@ -212,10 +205,7 @@ const HouseForm: React.FC<HouseFormProps> = ({
                   <thead className="bg-slate-50 border-b">
                     <tr className="text-[10px] font-bold uppercase text-slate-400">
                       <th className="px-4 py-3">Họ tên</th>
-                      <th className="px-4 py-3">Quan hệ với chủ hộ</th>
-                      <th className="px-4 py-3">CCCD</th>
-                      <th className="px-4 py-3">Ngày sinh</th>
-                      <th className="px-4 py-3">Giới tính</th>
+                      <th className="px-4 py-3">Quan hệ</th>
                       <th className="px-4 py-3">Trạng thái</th>
                       <th className="px-4 py-3 text-right">#</th>
                     </tr>
@@ -223,35 +213,20 @@ const HouseForm: React.FC<HouseFormProps> = ({
                   <tbody className="divide-y divide-slate-100">
                     {formData.QuanHeChuHo && formData.QuanHeChuHo.length > 0 ? (
                       formData.QuanHeChuHo.map(member => (
-                        <tr key={member.id} className={`hover:bg-slate-50 group transition-colors ${editingMemberId === member.id ? 'bg-orange-50' : ''}`}>
+                        <tr key={member.id} className="hover:bg-slate-50 group">
                           <td className="px-4 py-3 font-bold text-slate-700">{member.HoTen}</td>
                           <td className="px-4 py-3"><span className="bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full font-medium">{member.QuanHe}</span></td>
-                          <td className="px-4 py-3 text-slate-500 font-mono">{member.SoCCCD || '--'}</td>
-                          <td className="px-4 py-3 text-slate-500">{member.NgaySinh || '--'}</td>
-                          <td className="px-4 py-3 text-slate-500">{member.GioiTinh}</td>
-                          <td className="px-4 py-3">
-                            {member.TrangThai === 'Còn sống' ? (
-                              <span className="flex items-center gap-1 text-emerald-600 font-medium"><Heart size={12} /> {member.TrangThai}</span>
-                            ) : (
-                              <span className="flex items-center gap-1 text-slate-400 font-medium"><HeartOff size={12} /> {member.TrangThai}</span>
-                            )}
-                          </td>
+                          <td className="px-4 py-3">{member.TrangThai}</td>
                           <td className="px-4 py-3 text-right">
-                            <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                              <button type="button" onClick={() => editFamilyMember(member)} className="p-1.5 hover:bg-orange-50 text-orange-600 rounded-lg">
-                                <Edit size={14} />
-                              </button>
-                              <button type="button" onClick={() => removeFamilyMember(member.id)} className="p-1.5 hover:bg-red-50 text-red-500 rounded-lg">
-                                <Trash2 size={14} />
-                              </button>
+                            <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100">
+                              <button type="button" onClick={() => editFamilyMember(member)} className="p-1 text-orange-600"><Edit size={14} /></button>
+                              <button type="button" onClick={() => removeFamilyMember(member.id)} className="p-1 text-red-500"><Trash2 size={14} /></button>
                             </div>
                           </td>
                         </tr>
                       ))
                     ) : (
-                      <tr>
-                        <td colSpan={7} className="px-4 py-8 text-center text-slate-400 italic">Chưa có người liên quan nào trong danh sách</td>
-                      </tr>
+                      <tr><td colSpan={4} className="px-4 py-6 text-center text-slate-400 italic">Chưa có thành viên gia đình</td></tr>
                     )}
                   </tbody>
                 </table>
@@ -263,33 +238,31 @@ const HouseForm: React.FC<HouseFormProps> = ({
         return (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium text-slate-700">Số nhà chính thức</label>
-              <input name="SoNha" value={formData.SoNha || ''} onChange={handleChange} className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
+              <label className="text-sm font-bold text-slate-700">Số nhà chính thức</label>
+              <input name="SoNha" value={formData.SoNha || ''} onChange={handleChange} className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" placeholder="VD: 125/2" />
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium text-slate-700">Tên đường <span className="text-red-500">*</span></label>
+              <label className="text-sm font-bold text-slate-700">Tên đường <span className="text-red-500 font-black">*</span></label>
               <select 
                 name="Duong" 
                 value={formData.Duong || ''} 
                 onChange={handleChange} 
-                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-                required
+                className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none ${!formData.Duong ? 'border-red-200 bg-red-50/30' : ''}`}
               >
                 <option value="">-- Chọn đường --</option>
                 {streets.map(st => <option key={st.id} value={st.name}>{st.name}</option>)}
               </select>
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium text-slate-700">Khu phố / Tổ dân phố <span className="text-red-500">*</span></label>
+              <label className="text-sm font-bold text-slate-700">Khu phố / Tổ dân phố <span className="text-red-500 font-black">*</span></label>
               <select 
                 name="KDC" 
                 value={formData.KDC || ''} 
                 onChange={handleChange} 
-                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-                required
+                className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none ${!formData.KDC ? 'border-red-200 bg-red-50/30' : ''}`}
               >
                 <option value="">-- Chọn khu phố --</option>
-                {neighborhoods.map(nb => <option key={nb.id} value={nb.nameNew}>{nb.nameNew} (Cũ: {nb.nameOld})</option>)}
+                {neighborhoods.map(nb => <option key={nb.id} value={nb.nameNew}>{nb.nameNew}</option>)}
               </select>
             </div>
             <div className="space-y-2">
@@ -329,14 +302,10 @@ const HouseForm: React.FC<HouseFormProps> = ({
                 <input name="SoThua" value={formData.SoThua || ''} onChange={handleChange} placeholder="Số thửa" className="w-1/2 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
               </div>
             </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-slate-700">Nguồn gốc đất</label>
-              <input name="NguonGocDa" value={formData.NguonGocDa || ''} onChange={handleChange} className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
-            </div>
             <div className="col-span-full space-y-2">
               <label className="flex items-center gap-2 text-sm font-medium text-slate-700">
                 <input type="checkbox" name="TranhChap" checked={formData.TranhChap} onChange={handleChange} className="w-4 h-4 rounded text-blue-600" />
-                Đang có tranh chấp
+                Hồ sơ đang có tranh chấp
               </label>
               {formData.TranhChap && (
                 <textarea name="NoiDungTra" value={formData.NoiDungTra || ''} onChange={handleChange} className="w-full px-3 py-2 border rounded-lg h-24 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Chi tiết nội dung tranh chấp..." />
@@ -363,52 +332,43 @@ const HouseForm: React.FC<HouseFormProps> = ({
               markers={formData.X && formData.Y ? [{ id: 'current_selection', lat: formData.X, lng: formData.Y, label: 'Vị trí đã chọn' }] : []}
             />
             <div className="flex justify-between items-center text-xs font-bold text-slate-500 bg-slate-100 p-2 rounded-lg">
-               <span>Tọa độ hiện tại: {formData.X?.toFixed(6)}, {formData.Y?.toFixed(6)}</span>
-               <button onClick={() => setActiveTab('Address')} className="text-blue-600 hover:underline">Xác nhận vị trí</button>
+               <span>Tọa độ: {formData.X?.toFixed(6)}, {formData.Y?.toFixed(6)}</span>
+               <button onClick={() => setActiveTab('Address')} className="text-blue-600 hover:underline">Xác nhận</button>
             </div>
           </div>
         );
-      default:
-        return null;
+      default: return null;
     }
   };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
-        {/* Header */}
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col border border-slate-200">
         <div className="flex items-center justify-between p-6 border-b">
           <div>
-            <h2 className="text-xl font-bold text-slate-900">{isEditing ? 'Cập Nhật Thông Tin Số Nhà' : 'Thêm Mới Số Nhà'}</h2>
-            <p className="text-sm text-slate-500">Mã hồ sơ: {formData.MaSoHS || 'Tự động tạo'}</p>
+            <h2 className="text-xl font-bold text-slate-900">{isEditing ? 'Cập Nhật Thông Tin Số Nhà' : 'Thêm Mới Hồ Sơ Số Nhà'}</h2>
+            <p className="text-sm text-slate-500">Mã hồ sơ: {formData.MaSoHS || 'Hệ thống tự tạo'}</p>
           </div>
-          <button onClick={onClose} className="p-2 hover:bg-slate-100 rounded-full transition-colors">
-            <X size={24} />
-          </button>
+          <button onClick={onClose} className="p-2 hover:bg-slate-100 rounded-full transition-colors"><X size={24} /></button>
         </div>
 
-        {/* Tabs */}
-        <div className="flex bg-slate-50 px-6 gap-6">
-          <TabButton active={activeTab === 'Owner'} onClick={() => setActiveTab('Owner'} icon={<User size={18} />} label="Chủ hộ & Người liên quan" />
-          <TabButton active={activeTab === 'Address'} onClick={() => setActiveTab('Address'} icon={<Navigation size={18} />} label="Địa chỉ" />
-          <TabButton active={activeTab === 'Legal'} onClick={() => setActiveTab('Legal'} icon={<FileText size={18} />} label="Pháp lý" />
-          <TabButton active={activeTab === 'Technical'} onClick={() => setActiveTab('Technical'} icon={<Settings size={18} />} label="Kỹ thuật" />
-          <TabButton active={activeTab === 'Map'} onClick={() => setActiveTab('Map'} icon={<MapPin size={18} />} label="Vị trí" />
+        <div className="flex bg-slate-50 px-6 gap-6 overflow-x-auto no-scrollbar">
+          <TabButton active={activeTab === 'Owner'} onClick={() => setActiveTab('Owner')} icon={<User size={18} />} label="Chủ hộ & GĐ" />
+          <TabButton active={activeTab === 'Address'} onClick={() => setActiveTab('Address')} icon={<Navigation size={18} />} label="Địa chỉ" />
+          <TabButton active={activeTab === 'Legal'} onClick={() => setActiveTab('Legal')} icon={<FileText size={18} />} label="Pháp lý" />
+          <TabButton active={activeTab === 'Technical'} onClick={() => setActiveTab('Technical')} icon={<Settings size={18} />} label="Kỹ thuật" />
+          <TabButton active={activeTab === 'Map'} onClick={() => setActiveTab('Map')} icon={<MapPin size={18} />} label="Vị trí" />
         </div>
 
-        {/* Content */}
-        <div className="flex-1 overflow-y-auto p-6 custom-scrollbar">
-          {renderTabContent()}
-        </div>
+        <div className="flex-1 overflow-y-auto p-6 custom-scrollbar">{renderTabContent()}</div>
 
-        {/* Footer */}
         <div className="p-6 border-t bg-slate-50 flex justify-end gap-3">
-          <button onClick={onClose} className="px-6 py-2 text-slate-600 font-medium hover:text-slate-800 transition-colors">Hủy</button>
+          <button onClick={onClose} className="px-6 py-2 text-slate-600 font-bold hover:text-slate-800">Hủy bỏ</button>
           <button 
-            onClick={() => onSubmit(formData)}
-            className="px-8 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg shadow-lg flex items-center gap-2 transition-all transform hover:scale-105 active:scale-95"
+            onClick={handleSave}
+            className="px-8 py-2 bg-blue-600 hover:bg-blue-700 text-white font-black rounded-xl shadow-lg flex items-center gap-2 transition-all transform hover:scale-105 active:scale-95"
           >
-            <Save size={18} /> {isEditing ? 'Lưu thay đổi' : 'Tạo hồ sơ mới'}
+            <Save size={18} /> {isEditing ? 'Lưu thay đổi' : 'Lưu hồ sơ'}
           </button>
         </div>
       </div>
@@ -419,7 +379,7 @@ const HouseForm: React.FC<HouseFormProps> = ({
 const TabButton: React.FC<{ active: boolean; onClick: () => void; icon: React.ReactNode; label: string }> = ({ active, onClick, icon, label }) => (
   <button 
     onClick={onClick}
-    className={`flex items-center gap-2 py-4 border-b-2 font-medium text-sm transition-all ${active ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-700'}`}
+    className={`flex items-center gap-2 py-4 border-b-2 font-bold text-sm transition-all shrink-0 ${active ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-400 hover:text-slate-600'}`}
   >
     {icon} {label}
   </button>

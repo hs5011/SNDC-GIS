@@ -221,8 +221,8 @@ const RelatedRecordsManager: React.FC<RelatedRecordsManagerProps> = ({
                           <tr key={item.id} className="hover:bg-slate-50/80 transition-colors group">
                             <td className="px-6 py-4">
                               <p className="font-bold text-slate-800">{item.HoTen}</p>
-                              {item.SoQuanLyHS ? (
-                                <p className="text-[10px] text-blue-500 font-mono font-bold mt-0.5">Mã HS: {item.SoQuanLyHS}</p>
+                              {(item as any).SoQuanLyHS ? (
+                                <p className="text-[10px] text-blue-500 font-mono font-bold mt-0.5">Mã HS: {(item as any).SoQuanLyHS}</p>
                               ) : (
                                 <p className="text-[10px] text-slate-300 italic mt-0.5">Chưa cập nhật mã</p>
                               )}
@@ -234,11 +234,12 @@ const RelatedRecordsManager: React.FC<RelatedRecordsManagerProps> = ({
                             </td>
                             <td className="px-6 py-4">
                               <span className={`text-xs font-black text-${cat.color}-700`}>
-                                {item.LoaiDoiTuong || item.Dien || item.LoaiDienChinhSach || item.LoaiDien}
+                                {/* Use type assertions to safely access category-specific properties on union type */}
+                                {(item as any).LoaiDoiTuong || (item as any).Dien || (item as any).LoaiDienChinhSach || (item as any).LoaiDien}
                               </span>
-                              {item.SoTien > 0 && (
+                              {(item as any).SoTien > 0 && (
                                 <p className="text-[10px] text-emerald-600 font-bold mt-1">
-                                  Trợ cấp: {item.SoTien.toLocaleString()} đ
+                                  Trợ cấp: {((item as any).SoTien as number).toLocaleString()} đ
                                 </p>
                               )}
                             </td>
