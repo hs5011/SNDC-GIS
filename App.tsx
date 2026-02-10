@@ -1516,7 +1516,7 @@ const App: React.FC = () => {
       <aside className="hidden lg:flex w-64 bg-slate-900 flex-col text-slate-400 shrink-0 border-r border-slate-800">
         <div className="p-6 flex items-center gap-3 text-white">
           <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center"><Home size={20} /></div>
-          <span className="font-bold text-lg tracking-tight">SmartHouse GIS</span>
+          <span className="font-bold text-lg tracking-tight">QLSNDC-GIS</span>
         </div>
         <nav className="flex-1 px-4 space-y-1 overflow-y-auto custom-scrollbar pb-6">
           <NavItem icon={<Database size={18} />} label="Hồ sơ số nhà" active={activeSidebarTab === 'records'} onClick={() => setActiveSidebarTab('records')} />
@@ -1587,7 +1587,7 @@ const App: React.FC = () => {
       )}
 
       {isLandFormOpen && (
-        <PublicLandForm onClose={() => { setIsLandFormOpen(false); setEditingLand(undefined); }} onSubmit={handleAddOrEditLand} initialData={editingLand} isEditing={!!editingLand} houseRecords={records} />
+        <PublicLandForm onClose={() => { setIsLandFormOpen(false); setEditingLand(undefined); }} onSubmit={handleAddOrEditHouse} initialData={editingLand} isEditing={!!editingLand} houseRecords={records} />
       )}
       {isGeneralFormOpen && (
         <GeneralForm 
