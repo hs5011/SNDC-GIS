@@ -20,7 +20,6 @@ const SocialProtectionForm: React.FC<SocialProtectionFormProps> = ({
   const [selectedHouseId, setSelectedHouseId] = useState<string | undefined>(initialData?.LinkedHouseId);
   const [houseSearch, setHouseSearch] = useState('');
   const [editingTempIndex, setEditingTempIndex] = useState<number | null>(null);
-
   const isHouseLocked = useMemo(() => !!initialData?.LinkedHouseId && !isEditing, [initialData, isEditing]);
   const [recordsList, setRecordsList] = useState<Partial<SocialProtectionRecord>[]>(isEditing && initialData ? [initialData] : []);
 
@@ -31,7 +30,6 @@ const SocialProtectionForm: React.FC<SocialProtectionFormProps> = ({
     SoQuanLyHS: initialData?.SoQuanLyHS || '',
     SoTien: initialData?.SoTien || 0,
     NguoiNhanThay: initialData?.NguoiNhanThay || '',
-    // Fixed: Changed 'initialRecord' to 'initialData' as 'initialRecord' was not defined
     HinhThucNhan: initialData?.HinhThucNhan || 'Tiền mặt'
   });
 
@@ -51,10 +49,16 @@ const SocialProtectionForm: React.FC<SocialProtectionFormProps> = ({
   const availableReceivers = selectedHouse ? [{ id: 'chuho', name: `${selectedHouse.TenChuHo} (Chủ hộ)` }, ...(selectedHouse.QuanHeChuHo || []).map(m => ({ id: m.id, name: `${m.HoTen} (${m.QuanHe})` }))] : [];
 
   const handleAddToList = () => {
-    if (!currentRecord.HoTen?.trim() || !currentRecord.LoaiDien) {
-      alert("CẢNH BÁO: Vui lòng nhập đầy đủ Họ tên và Diện bảo trợ!");
+    const missingFields: string[] = [];
+    if (!currentRecord.HoTen?.trim()) missingFields.push("Họ và tên");
+    if (!currentRecord.LoaiDien) missingFields.push("Diện bảo trợ");
+    if (!currentRecord.QuanHe) missingFields.push("Quan hệ chủ hộ");
+
+    if (missingFields.length > 0) {
+      alert(`CẢNH BÁO: Vui lòng nhập đầy đủ các thông tin bắt buộc sau:\n- ${missingFields.join('\n- ')}`);
       return;
     }
+
     if (editingTempIndex !== null) {
       const newList = [...recordsList];
       newList[editingTempIndex] = { ...currentRecord };
@@ -69,6 +73,10 @@ const SocialProtectionForm: React.FC<SocialProtectionFormProps> = ({
   const handleSaveAll = () => {
     if (!selectedHouseId) { alert("CẢNH BÁO: Bạn chưa chọn Số nhà liên kết!"); return; }
     if (isEditing) {
+      if (!currentRecord.HoTen?.trim() || !currentRecord.LoaiDien) {
+        alert("CẢNH BÁO: Họ tên và Diện bảo trợ không được để trống!");
+        return;
+      }
       onSubmit([{ ...currentRecord, LinkedHouseId: selectedHouseId }]);
     } else {
       if (recordsList.length === 0) { alert("CẢNH BÁO: Vui lòng thêm hồ sơ vào danh sách!"); return; }
@@ -96,11 +104,7 @@ const SocialProtectionForm: React.FC<SocialProtectionFormProps> = ({
                 {houseSearch && filteredHouses.length > 0 && (
                   <div className="bg-white border rounded-xl shadow-xl overflow-hidden divide-y max-h-[350px] overflow-y-auto custom-scrollbar">
                     {filteredHouses.map(h => (
-                      <button 
-                        key={h.id} 
-                        onClick={() => { setSelectedHouseId(h.id); setHouseSearch(''); }} 
-                        className="w-full text-left px-5 py-4 hover:bg-emerald-50 transition-colors flex justify-between items-center group"
-                      >
+                      <button key={h.id} onClick={() => { setSelectedHouseId(h.id); setHouseSearch(''); }} className="w-full text-left px-5 py-4 hover:bg-emerald-50 transition-colors flex justify-between items-center group">
                         <div>
                           <div className="text-sm font-black text-slate-800">{h.SoNha ? `SN ${h.SoNha} ` : ''}{h.Duong || ''}</div>
                           <div className="text-xs text-slate-500 font-medium mt-1">Chủ hộ: {h.TenChuHo || ''} | CCCD: {h.SoCCCD || ''}</div>
@@ -131,8 +135,24 @@ const SocialProtectionForm: React.FC<SocialProtectionFormProps> = ({
               <label className="text-xs font-black text-slate-400 uppercase flex items-center gap-2"><HeartHandshake size={14} className="text-emerald-600" /> 2. Thông tin Bảo trợ XH</label>
               <div className="p-6 rounded-2xl border-2 border-slate-100 bg-white space-y-4 shadow-sm">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-1"><label className="text-xs font-bold text-slate-600">Họ và tên <span className="text-red-500 font-black">*</span></label><input value={currentRecord.HoTen || ''} onChange={e => setCurrentRecord({...currentRecord, HoTen: e.target.value})} className="w-full px-3 py-2 border rounded-lg text-sm bg-slate-50" placeholder="Họ và tên" /></div>
-                  <div className="space-y-1"><label className="text-xs font-bold text-slate-600">Diện bảo trợ <span className="text-red-500 font-black">*</span></label><select value={currentRecord.LoaiDien || ''} onChange={e => setCurrentRecord({...currentRecord, LoaiDien: e.target.value})} className="w-full px-3 py-2 border rounded-lg text-sm bg-slate-50 font-medium"><option value="">-- Chọn diện --</option>{protectionTypes.map(pt => <option key={pt.id} value={pt.name}>{pt.name}</option>)}</select></div>
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-slate-600">Họ và tên <span className="text-red-500 font-black">*</span></label>
+                    <input value={currentRecord.HoTen || ''} onChange={e => setCurrentRecord({...currentRecord, HoTen: e.target.value})} className={`w-full px-3 py-2 border rounded-lg text-sm bg-slate-50 ${!currentRecord.HoTen?.trim() ? 'border-red-200' : ''}`} placeholder="Họ và tên" />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-slate-600">Quan hệ chủ hộ <span className="text-red-500 font-black">*</span></label>
+                    <select value={currentRecord.QuanHe || ''} onChange={e => setCurrentRecord({...currentRecord, QuanHe: e.target.value})} className={`w-full px-3 py-2 border rounded-lg text-sm bg-slate-50 ${!currentRecord.QuanHe ? 'border-red-200' : ''}`}>
+                      <option value="">-- Chọn quan hệ --</option>
+                      {relationshipTypes.map(rel => <option key={rel.id} value={rel.name}>{rel.name}</option>)}
+                    </select>
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-slate-600">Diện bảo trợ <span className="text-red-500 font-black">*</span></label>
+                    <select value={currentRecord.LoaiDien || ''} onChange={e => setCurrentRecord({...currentRecord, LoaiDien: e.target.value})} className={`w-full px-3 py-2 border rounded-lg text-sm bg-slate-50 font-medium ${!currentRecord.LoaiDien ? 'border-red-200' : ''}`}>
+                      <option value="">-- Chọn diện --</option>
+                      {protectionTypes.map(pt => <option key={pt.id} value={pt.name}>{pt.name}</option>)}
+                    </select>
+                  </div>
                   <div className="space-y-1"><label className="text-xs font-bold text-slate-600">Mức trợ cấp</label><input type="number" value={currentRecord.SoTien || 0} onChange={e => setCurrentRecord({...currentRecord, SoTien: parseFloat(e.target.value) || 0})} className="w-full px-3 py-2 border rounded-lg text-sm text-emerald-600 font-black bg-slate-50" /></div>
                   <div className="space-y-1"><label className="text-xs font-bold text-slate-600">Người nhận thay</label><select value={currentRecord.NguoiNhanThay || ''} onChange={e => setCurrentRecord({...currentRecord, NguoiNhanThay: e.target.value})} className="w-full px-3 py-2 border rounded-lg text-sm bg-slate-50 font-medium"><option value="">-- Chính chủ --</option>{availableReceivers.map(rec => <option key={rec.id} value={rec.name}>{rec.name}</option>)}</select></div>
                 </div>
@@ -145,7 +165,6 @@ const SocialProtectionForm: React.FC<SocialProtectionFormProps> = ({
                   </div>
                 )}
               </div>
-
               {!isEditing && recordsList.length > 0 && (
                 <div className="space-y-3">
                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2"><List size={14} /> Danh sách bảo trợ đang chờ lưu ({recordsList.length})</label>

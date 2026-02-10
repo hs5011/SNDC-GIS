@@ -20,7 +20,6 @@ const MeritForm: React.FC<MeritFormProps> = ({
   const [selectedHouseId, setSelectedHouseId] = useState<string | undefined>(initialData?.LinkedHouseId);
   const [houseSearch, setHouseSearch] = useState('');
   const [editingTempIndex, setEditingTempIndex] = useState<number | null>(null);
-
   const isHouseLocked = useMemo(() => !!initialData?.LinkedHouseId && !isEditing, [initialData, isEditing]);
   const [meritsList, setMeritsList] = useState<Partial<MeritRecord>[]>(isEditing && initialData ? [initialData] : []);
 
@@ -54,10 +53,16 @@ const MeritForm: React.FC<MeritFormProps> = ({
   ] : [];
 
   const handleAddToList = () => {
-    if (!currentMerit.HoTen?.trim() || !currentMerit.LoaiDoiTuong) {
-      alert("CẢNH BÁO: Vui lòng nhập đầy đủ Họ tên và Loại đối tượng NCC!");
+    const missingFields: string[] = [];
+    if (!currentMerit.HoTen?.trim()) missingFields.push("Họ tên đối tượng");
+    if (!currentMerit.LoaiDoiTuong) missingFields.push("Loại đối tượng NCC");
+    if (!currentMerit.QuanHe) missingFields.push("Quan hệ chủ hộ");
+
+    if (missingFields.length > 0) {
+      alert(`CẢNH BÁO: Vui lòng nhập đầy đủ các thông tin bắt buộc sau:\n- ${missingFields.join('\n- ')}`);
       return;
     }
+
     if (editingTempIndex !== null) {
       const newList = [...meritsList];
       newList[editingTempIndex] = { ...currentMerit };
@@ -72,6 +77,10 @@ const MeritForm: React.FC<MeritFormProps> = ({
   const handleSaveAll = () => {
     if (!selectedHouseId) { alert("CẢNH BÁO: Bạn chưa chọn Số nhà liên kết!"); return; }
     if (isEditing) {
+      if (!currentMerit.HoTen?.trim() || !currentMerit.LoaiDoiTuong) {
+        alert("CẢNH BÁO: Họ tên và Loại đối tượng không được để trống!");
+        return;
+      }
       onSubmit([{ ...currentMerit, LinkedHouseId: selectedHouseId }]);
     } else {
       if (meritsList.length === 0) { alert("CẢNH BÁO: Vui lòng thêm hồ sơ vào danh sách!"); return; }
@@ -90,7 +99,6 @@ const MeritForm: React.FC<MeritFormProps> = ({
         <div className="flex-1 overflow-y-auto p-6 space-y-8 custom-scrollbar">
           <div className="space-y-4">
             <label className="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center gap-2"><Building size={14} className="text-blue-600" /> 1. Chọn số nhà liên kết <span className="text-red-500 font-black">*</span></label>
-            
             {!isEditing && !isHouseLocked && (
               <div className="space-y-2">
                 <div className="flex items-center gap-2 px-4 py-3 border rounded-xl bg-white focus-within:ring-2 focus-within:ring-blue-500 shadow-sm">
@@ -100,11 +108,7 @@ const MeritForm: React.FC<MeritFormProps> = ({
                 {houseSearch && filteredHouses.length > 0 && (
                   <div className="bg-white border rounded-xl shadow-xl overflow-hidden divide-y max-h-[350px] overflow-y-auto custom-scrollbar">
                     {filteredHouses.map(h => (
-                      <button 
-                        key={h.id} 
-                        onClick={() => { setSelectedHouseId(h.id); setHouseSearch(''); }} 
-                        className="w-full text-left px-5 py-4 hover:bg-rose-50 transition-colors flex justify-between items-center group"
-                      >
+                      <button key={h.id} onClick={() => { setSelectedHouseId(h.id); setHouseSearch(''); }} className="w-full text-left px-5 py-4 hover:bg-rose-50 transition-colors flex justify-between items-center group">
                         <div>
                           <div className="text-sm font-black text-slate-800">{h.SoNha ? `SN ${h.SoNha} ` : ''}{h.Duong || ''}</div>
                           <div className="text-xs text-slate-500 font-medium mt-1">Chủ hộ: {h.TenChuHo || ''} | CCCD: {h.SoCCCD || ''}</div>
@@ -116,7 +120,6 @@ const MeritForm: React.FC<MeritFormProps> = ({
                 )}
               </div>
             )}
-
             {selectedHouse ? (
               <div className="border-2 border-rose-500 rounded-2xl p-5 flex items-center justify-between bg-rose-50 shadow-md">
                 <div className="flex items-center gap-4">
@@ -126,11 +129,7 @@ const MeritForm: React.FC<MeritFormProps> = ({
                     <p className="text-sm text-slate-600 font-bold">Chủ hộ: {selectedHouse.TenChuHo || ''} | CCCD: {selectedHouse.SoCCCD || ''}</p>
                   </div>
                 </div>
-                {!isEditing && !isHouseLocked && (
-                  <button onClick={() => setSelectedHouseId(undefined)} className="flex items-center gap-2 px-4 py-2 bg-white text-red-600 border border-red-200 rounded-xl text-xs font-black hover:bg-red-50 transition-all">
-                    <Trash2 size={16} /> Thay đổi
-                  </button>
-                )}
+                {!isEditing && !isHouseLocked && <button onClick={() => setSelectedHouseId(undefined)} className="flex items-center gap-2 px-4 py-2 bg-white text-red-600 border border-red-200 rounded-xl text-xs font-black hover:bg-red-50 transition-all"><Trash2 size={16} /> Thay đổi</button>}
               </div>
             ) : !houseSearch && <div className="border-2 border-dashed border-slate-200 rounded-2xl p-10 text-center bg-slate-50/50 italic text-slate-400 text-sm font-bold">Vui lòng tìm và chọn một số nhà liên kết để tiếp tục</div>}
           </div>
@@ -142,11 +141,18 @@ const MeritForm: React.FC<MeritFormProps> = ({
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-1">
                     <label className="text-xs font-bold text-slate-600">Họ và tên đối tượng <span className="text-red-500 font-black">*</span></label>
-                    <input value={currentMerit.HoTen || ''} onChange={e => setCurrentMerit({...currentMerit, HoTen: e.target.value})} className="w-full px-3 py-2 border rounded-lg text-sm bg-slate-50 shadow-inner" placeholder="Họ và tên" />
+                    <input value={currentMerit.HoTen || ''} onChange={e => setCurrentMerit({...currentMerit, HoTen: e.target.value})} className={`w-full px-3 py-2 border rounded-lg text-sm bg-slate-50 ${!currentMerit.HoTen?.trim() ? 'border-red-200' : ''}`} placeholder="Họ và tên" />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-slate-600">Quan hệ chủ hộ <span className="text-red-500 font-black">*</span></label>
+                    <select value={currentMerit.QuanHe || ''} onChange={e => setCurrentMerit({...currentMerit, QuanHe: e.target.value})} className={`w-full px-3 py-2 border rounded-lg text-sm bg-slate-50 ${!currentMerit.QuanHe ? 'border-red-200' : ''}`}>
+                      <option value="">-- Chọn quan hệ --</option>
+                      {relationshipTypes.map(rel => <option key={rel.id} value={rel.name}>{rel.name}</option>)}
+                    </select>
                   </div>
                   <div className="space-y-1">
                     <label className="text-xs font-bold text-slate-600">Loại đối tượng <span className="text-red-500 font-black">*</span></label>
-                    <select value={currentMerit.LoaiDoiTuong || ''} onChange={e => setCurrentMerit({...currentMerit, LoaiDoiTuong: e.target.value})} className="w-full px-3 py-2 border rounded-lg text-sm bg-slate-50 font-medium">
+                    <select value={currentMerit.LoaiDoiTuong || ''} onChange={e => setCurrentMerit({...currentMerit, LoaiDoiTuong: e.target.value})} className={`w-full px-3 py-2 border rounded-lg text-sm bg-slate-50 font-medium ${!currentMerit.LoaiDoiTuong ? 'border-red-200' : ''}`}>
                       <option value="">-- Chọn loại đối tượng --</option>
                       {meritTypes.map(mt => <option key={mt.id} value={mt.name}>{mt.name}</option>)}
                     </select>
@@ -172,7 +178,6 @@ const MeritForm: React.FC<MeritFormProps> = ({
                   </div>
                 )}
               </div>
-
               {!isEditing && meritsList.length > 0 && (
                 <div className="space-y-3">
                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2"><List size={14} /> Danh sách đối tượng đang chờ lưu ({meritsList.length})</label>

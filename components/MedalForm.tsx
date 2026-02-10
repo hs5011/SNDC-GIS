@@ -20,7 +20,6 @@ const MedalForm: React.FC<MedalFormProps> = ({
   const [selectedHouseId, setSelectedHouseId] = useState<string | undefined>(initialData?.LinkedHouseId);
   const [houseSearch, setHouseSearch] = useState('');
   const [editingTempIndex, setEditingTempIndex] = useState<number | null>(null);
-
   const isHouseLocked = useMemo(() => !!initialData?.LinkedHouseId && !isEditing, [initialData, isEditing]);
   const [medalsList, setMedalsList] = useState<Partial<MedalRecord>[]>(isEditing && initialData ? [initialData] : []);
 
@@ -50,10 +49,16 @@ const MedalForm: React.FC<MedalFormProps> = ({
   const availableReceivers = selectedHouse ? [{ id: 'chuho', name: `${selectedHouse.TenChuHo} (Chủ hộ)` }, ...(selectedHouse.QuanHeChuHo || []).map(m => ({ id: m.id, name: `${m.HoTen} (${m.QuanHe})` }))] : [];
 
   const handleAddToList = () => {
-    if (!currentMedal.HoTen?.trim() || !currentMedal.LoaiDoiTuong) {
-      alert("CẢNH BÁO: Vui lòng nhập Họ tên và Loại Huân/Huy chương!");
+    const missingFields: string[] = [];
+    if (!currentMedal.HoTen?.trim()) missingFields.push("Họ tên người nhận");
+    if (!currentMedal.LoaiDoiTuong) missingFields.push("Loại Huân/Huy chương");
+    if (!currentMedal.QuanHe) missingFields.push("Quan hệ chủ hộ");
+
+    if (missingFields.length > 0) {
+      alert(`CẢNH BÁO: Vui lòng nhập đầy đủ các thông tin bắt buộc sau:\n- ${missingFields.join('\n- ')}`);
       return;
     }
+
     if (editingTempIndex !== null) {
       const newList = [...medalsList];
       newList[editingTempIndex] = { ...currentMedal };
@@ -68,6 +73,10 @@ const MedalForm: React.FC<MedalFormProps> = ({
   const handleSaveAll = () => {
     if (!selectedHouseId) { alert("CẢNH BÁO: Bạn chưa chọn Số nhà liên kết!"); return; }
     if (isEditing) {
+      if (!currentMedal.HoTen?.trim() || !currentMedal.LoaiDoiTuong) {
+        alert("CẢNH BÁO: Vui lòng nhập đầy đủ thông tin bắt buộc!");
+        return;
+      }
       onSubmit([{ ...currentMedal, LinkedHouseId: selectedHouseId }]);
     } else {
       if (medalsList.length === 0) { alert("CẢNH BÁO: Vui lòng thêm hồ sơ vào danh sách!"); return; }
@@ -95,11 +104,7 @@ const MedalForm: React.FC<MedalFormProps> = ({
                 {houseSearch && filteredHouses.length > 0 && (
                   <div className="bg-white border rounded-xl shadow-xl overflow-hidden divide-y max-h-[350px] overflow-y-auto custom-scrollbar">
                     {filteredHouses.map(h => (
-                       <button 
-                         key={h.id} 
-                         onClick={() => { setSelectedHouseId(h.id); setHouseSearch(''); }} 
-                         className="w-full text-left px-5 py-4 hover:bg-amber-50 transition-colors flex justify-between items-center group"
-                       >
+                       <button key={h.id} onClick={() => { setSelectedHouseId(h.id); setHouseSearch(''); }} className="w-full text-left px-5 py-4 hover:bg-amber-50 transition-colors flex justify-between items-center group">
                          <div>
                            <div className="text-sm font-black text-slate-800">{h.SoNha ? `SN ${h.SoNha} ` : ''}{h.Duong || ''}</div>
                            <div className="text-xs text-slate-500 font-medium mt-1">Chủ hộ: {h.TenChuHo || ''} | CCCD: {h.SoCCCD || ''}</div>
@@ -130,10 +135,32 @@ const MedalForm: React.FC<MedalFormProps> = ({
               <label className="text-xs font-black text-slate-400 uppercase flex items-center gap-2"><Award size={14} className="text-amber-600" /> 2. Thông tin Huân chương</label>
               <div className="p-6 rounded-2xl border-2 border-slate-100 bg-white space-y-4 shadow-sm">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-1"><label className="text-xs font-bold text-slate-600">Họ tên người nhận <span className="text-red-500 font-black">*</span></label><input value={currentMedal.HoTen || ''} onChange={e => setCurrentMedal({...currentMedal, HoTen: e.target.value})} className="w-full px-3 py-2 border rounded-lg text-sm bg-slate-50" placeholder="Họ và tên" /></div>
-                  <div className="space-y-1"><label className="text-xs font-bold text-slate-600">Loại Huân chương <span className="text-red-500 font-black">*</span></label><select value={currentMedal.LoaiDoiTuong || ''} onChange={e => setCurrentMedal({...currentMedal, LoaiDoiTuong: e.target.value})} className="w-full px-3 py-2 border rounded-lg text-sm bg-slate-50 font-medium"><option value="">-- Chọn loại --</option>{medalTypes.map(mt => <option key={mt.id} value={mt.name}>{mt.name}</option>)}</select></div>
-                  <div className="space-y-1"><label className="text-xs font-bold text-slate-600">Mức trợ cấp</label><input type="number" value={currentMedal.SoTien || 0} onChange={e => setCurrentMedal({...currentMedal, SoTien: parseFloat(e.target.value) || 0})} className="w-full px-3 py-2 border rounded-lg text-sm text-emerald-600 font-black bg-slate-50" /></div>
-                  <div className="space-y-1"><label className="text-xs font-bold text-slate-600">Người nhận thay</label><select value={currentMedal.NguoiNhanThay || ''} onChange={e => setCurrentMedal({...currentMedal, NguoiNhanThay: e.target.value})} className="w-full px-3 py-2 border rounded-lg text-sm bg-slate-50 font-medium"><option value="">-- Chính chủ --</option>{availableReceivers.map(rec => <option key={rec.id} value={rec.name}>{rec.name}</option>)}</select></div>
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-slate-600">Họ tên người nhận <span className="text-red-500 font-black">*</span></label>
+                    <input value={currentMedal.HoTen || ''} onChange={e => setCurrentMedal({...currentMedal, HoTen: e.target.value})} className={`w-full px-3 py-2 border rounded-lg text-sm bg-slate-50 ${!currentMedal.HoTen?.trim() ? 'border-red-200' : ''}`} placeholder="Họ và tên" />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-slate-600">Quan hệ chủ hộ <span className="text-red-500 font-black">*</span></label>
+                    <select value={currentMedal.QuanHe || ''} onChange={e => setCurrentMedal({...currentMedal, QuanHe: e.target.value})} className={`w-full px-3 py-2 border rounded-lg text-sm bg-slate-50 ${!currentMedal.QuanHe ? 'border-red-200' : ''}`}>
+                      <option value="">-- Chọn quan hệ --</option>
+                      {relationshipTypes.map(rel => <option key={rel.id} value={rel.name}>{rel.name}</option>)}
+                    </select>
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-slate-600">Loại Huân chương <span className="text-red-500 font-black">*</span></label>
+                    <select value={currentMedal.LoaiDoiTuong || ''} onChange={e => setCurrentMedal({...currentMedal, LoaiDoiTuong: e.target.value})} className={`w-full px-3 py-2 border rounded-lg text-sm bg-slate-50 font-medium ${!currentMedal.LoaiDoiTuong ? 'border-red-200' : ''}`}>
+                      <option value="">-- Chọn loại --</option>
+                      {medalTypes.map(mt => <option key={mt.id} value={mt.name}>{mt.name}</option>)}
+                    </select>
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-slate-600">Mức trợ cấp</label>
+                    <input type="number" value={currentMedal.SoTien || 0} onChange={e => setCurrentMedal({...currentMedal, SoTien: parseFloat(e.target.value) || 0})} className="w-full px-3 py-2 border rounded-lg text-sm text-emerald-600 font-black bg-slate-50" />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-slate-600">Người nhận thay</label>
+                    <select value={currentMedal.NguoiNhanThay || ''} onChange={e => setCurrentMedal({...currentMedal, NguoiNhanThay: e.target.value})} className="w-full px-3 py-2 border rounded-lg text-sm bg-slate-50 font-medium"><option value="">-- Chính chủ --</option>{availableReceivers.map(rec => <option key={rec.id} value={rec.name}>{rec.name}</option>)}</select>
+                  </div>
                 </div>
                 {!isEditing && (
                   <div className="flex justify-end pt-2">
@@ -144,7 +171,6 @@ const MedalForm: React.FC<MedalFormProps> = ({
                   </div>
                 )}
               </div>
-
               {!isEditing && medalsList.length > 0 && (
                 <div className="space-y-3">
                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2"><List size={14} /> Danh sách hồ sơ đang chờ lưu ({medalsList.length})</label>

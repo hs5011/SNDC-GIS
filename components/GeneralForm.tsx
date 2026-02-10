@@ -15,24 +15,13 @@ interface GeneralFormProps {
 }
 
 const GeneralForm: React.FC<GeneralFormProps> = ({ 
-  initialData, 
-  onSubmit, 
-  onClose, 
-  isEditing, 
-  houseRecords,
-  relationshipTypes,
-  generalStatuses,
-  banks
+  initialData, onSubmit, onClose, isEditing, houseRecords, relationshipTypes, generalStatuses, banks
 }) => {
   const [selectedHouseId, setSelectedHouseId] = useState<string | undefined>(initialData?.LinkedHouseId);
   const [houseSearch, setHouseSearch] = useState('');
   const [editingTempIndex, setEditingTempIndex] = useState<number | null>(null);
-  
   const isHouseLocked = useMemo(() => !!initialData?.LinkedHouseId && !isEditing, [initialData, isEditing]);
-
-  const [generalsList, setGeneralsList] = useState<Partial<GeneralRecord>[]>(
-    isEditing && initialData ? [initialData] : []
-  );
+  const [generalsList, setGeneralsList] = useState<Partial<GeneralRecord>[]>(isEditing && initialData ? [initialData] : []);
 
   const [currentGeneral, setCurrentGeneral] = useState<Partial<GeneralRecord>>({
     Dien: initialData?.Dien || 'TW',
@@ -58,22 +47,25 @@ const GeneralForm: React.FC<GeneralFormProps> = ({
     ).slice(0, 20);
   }, [houseSearch, houseRecords]);
 
-  const selectedHouse = useMemo(() => {
-    return houseRecords.find(h => h.id === selectedHouseId);
-  }, [selectedHouseId, houseRecords]);
+  const selectedHouse = useMemo(() => houseRecords.find(h => h.id === selectedHouseId), [selectedHouseId, houseRecords]);
 
   const availableReceivers = useMemo(() => {
     if (!selectedHouse) return [];
-    const members = [
+    return [
       { id: 'chuho', name: `${selectedHouse.TenChuHo || ''} (Chủ hộ)` },
       ...(selectedHouse.QuanHeChuHo || []).map(m => ({ id: m.id, name: `${m.HoTen || ''} (${m.QuanHe || ''})` }))
     ];
-    return members;
   }, [selectedHouse]);
 
   const handleAddToList = () => {
-    if (!currentGeneral.HoTen?.trim() || !currentGeneral.TinhTrang) {
-      alert("LỖI: Vui lòng nhập đầy đủ Họ tên và Tình trạng!");
+    // Validation
+    const missingFields: string[] = [];
+    if (!currentGeneral.HoTen?.trim()) missingFields.push("Họ và tên");
+    if (!currentGeneral.TinhTrang) missingFields.push("Tình trạng");
+    if (!currentGeneral.QuanHe) missingFields.push("Quan hệ chủ hộ");
+
+    if (missingFields.length > 0) {
+      alert(`CẢNH BÁO: Vui lòng nhập đầy đủ các thông tin bắt buộc sau:\n- ${missingFields.join('\n- ')}`);
       return;
     }
     
@@ -95,17 +87,15 @@ const GeneralForm: React.FC<GeneralFormProps> = ({
   };
 
   const handleSaveAll = () => {
-    if (!selectedHouseId) {
-      alert("CẢNH BÁO: Bạn chưa chọn Số nhà để liên kết!");
-      return;
-    }
+    if (!selectedHouseId) { alert("CẢNH BÁO: Bạn chưa chọn Số nhà để liên kết!"); return; }
     if (isEditing) {
-      onSubmit([{ ...currentGeneral, LinkedHouseId: selectedHouseId }]);
-    } else {
-      if (generalsList.length === 0) {
-        alert("CẢNH BÁO: Danh sách hồ sơ đang trống!");
+      if (!currentGeneral.HoTen?.trim() || !currentGeneral.TinhTrang) {
+        alert("CẢNH BÁO: Thông tin Họ tên và Tình trạng không được để trống!");
         return;
       }
+      onSubmit([{ ...currentGeneral, LinkedHouseId: selectedHouseId }]);
+    } else {
+      if (generalsList.length === 0) { alert("CẢNH BÁO: Danh sách hồ sơ đang trống!"); return; }
       onSubmit(generalsList.map(g => ({ ...g, LinkedHouseId: selectedHouseId })));
     }
   };
@@ -119,31 +109,21 @@ const GeneralForm: React.FC<GeneralFormProps> = ({
         </div>
 
         <div className="flex-1 overflow-y-auto p-6 space-y-8 custom-scrollbar">
+          {/* Section 1: Chọn số nhà */}
           <div className="space-y-4">
             <label className="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
               <Building size={14} className="text-blue-600" /> 1. Chọn số nhà liên kết <span className="text-red-500 font-black">*</span>
             </label>
-            
             {!isEditing && !isHouseLocked && (
               <div className="space-y-2">
                 <div className="flex items-center gap-2 px-4 py-3 border rounded-xl focus-within:ring-2 focus-within:ring-blue-500 bg-white shadow-sm">
                   <Search size={20} className="text-slate-400" />
-                  <input 
-                    type="text" 
-                    placeholder="Nhập tên chủ hộ, số nhà, đường hoặc CCCD để tìm..." 
-                    className="w-full outline-none text-sm font-medium" 
-                    value={houseSearch} 
-                    onChange={(e) => setHouseSearch(e.target.value)} 
-                  />
+                  <input type="text" placeholder="Nhập tên chủ hộ, số nhà, đường hoặc CCCD để tìm..." className="w-full outline-none text-sm font-medium" value={houseSearch} onChange={(e) => setHouseSearch(e.target.value)} />
                 </div>
                 {houseSearch && filteredHouses.length > 0 && (
                   <div className="bg-white border rounded-xl shadow-xl overflow-hidden divide-y max-h-[400px] overflow-y-auto custom-scrollbar">
                     {filteredHouses.map(house => (
-                      <button 
-                        key={house.id} 
-                        onClick={() => { setSelectedHouseId(house.id); setHouseSearch(''); }} 
-                        className="w-full text-left px-5 py-4 hover:bg-blue-50 transition-colors flex justify-between items-center group"
-                      >
+                      <button key={house.id} onClick={() => { setSelectedHouseId(house.id); setHouseSearch(''); }} className="w-full text-left px-5 py-4 hover:bg-blue-50 transition-colors flex justify-between items-center group">
                         <div>
                           <div className="text-sm font-black text-slate-800">{house.SoNha ? `SN ${house.SoNha} ` : ''}{house.Duong || ''}</div>
                           <div className="text-xs text-slate-500 font-medium mt-1 italic">Chủ hộ: {house.TenChuHo || ''} | CCCD: {house.SoCCCD || ''}</div>
@@ -155,7 +135,6 @@ const GeneralForm: React.FC<GeneralFormProps> = ({
                 )}
               </div>
             )}
-
             {selectedHouse ? (
               <div className="border-2 border-blue-600 rounded-2xl p-5 flex items-center justify-between bg-blue-50 shadow-md">
                 <div className="flex items-center gap-4">
@@ -165,18 +144,9 @@ const GeneralForm: React.FC<GeneralFormProps> = ({
                     <p className="text-sm text-slate-600 font-bold">Chủ hộ: {selectedHouse.TenChuHo || ''} | CCCD: {selectedHouse.SoCCCD || ''}</p>
                   </div>
                 </div>
-                {!isEditing && !isHouseLocked && (
-                  <button onClick={() => setSelectedHouseId(undefined)} className="flex items-center gap-2 px-4 py-2 bg-white text-red-600 border border-red-200 rounded-xl text-xs font-black hover:bg-red-50 transition-all shadow-sm">
-                    <Trash2 size={16} /> Thay đổi
-                  </button>
-                )}
+                {!isEditing && !isHouseLocked && <button onClick={() => setSelectedHouseId(undefined)} className="flex items-center gap-2 px-4 py-2 bg-white text-red-600 border border-red-200 rounded-xl text-xs font-black hover:bg-red-50 transition-all shadow-sm"><Trash2 size={16} /> Thay đổi</button>}
               </div>
-            ) : !houseSearch && (
-              <div className="border-2 border-dashed border-slate-200 rounded-2xl p-10 text-center bg-slate-50/50">
-                <Search size={32} className="text-slate-300 mx-auto mb-3" />
-                <p className="text-sm font-bold text-slate-400">Vui lòng nhập tìm kiếm ở trên để chọn một số nhà liên kết hồ sơ</p>
-              </div>
-            )}
+            ) : !houseSearch && <div className="border-2 border-dashed border-slate-200 rounded-2xl p-10 text-center bg-slate-50/50"><Search size={32} className="text-slate-300 mx-auto mb-3" /><p className="text-sm font-bold text-slate-400">Vui lòng nhập tìm kiếm ở trên để chọn một số nhà liên kết hồ sơ</p></div>}
           </div>
 
           {selectedHouseId && (
@@ -184,25 +154,31 @@ const GeneralForm: React.FC<GeneralFormProps> = ({
               <label className="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
                 <User size={14} className="text-blue-600" /> 2. Nhập thông tin Tướng lĩnh
               </label>
-
               <div className="p-6 rounded-2xl border-2 border-slate-100 bg-white space-y-4 shadow-sm">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-1">
                     <label className="text-xs font-bold text-slate-600">Họ và tên <span className="text-red-500 font-black">*</span></label>
-                    <input value={currentGeneral.HoTen || ''} onChange={e => setCurrentGeneral({...currentGeneral, HoTen: e.target.value})} className="w-full px-3 py-2 border rounded-lg text-sm bg-slate-50" placeholder="Họ và tên tướng lĩnh" />
+                    <input value={currentGeneral.HoTen || ''} onChange={e => setCurrentGeneral({...currentGeneral, HoTen: e.target.value})} className={`w-full px-3 py-2 border rounded-lg text-sm bg-slate-50 ${!currentGeneral.HoTen?.trim() ? 'border-red-200' : ''}`} placeholder="Họ và tên tướng lĩnh" />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-slate-600">Quan hệ chủ hộ <span className="text-red-500 font-black">*</span></label>
+                    <select value={currentGeneral.QuanHe || ''} onChange={e => setCurrentGeneral({...currentGeneral, QuanHe: e.target.value})} className={`w-full px-3 py-2 border rounded-lg text-sm bg-slate-50 ${!currentGeneral.QuanHe ? 'border-red-200' : ''}`}>
+                      <option value="">-- Chọn quan hệ --</option>
+                      {relationshipTypes.map(rel => <option key={rel.id} value={rel.name}>{rel.name}</option>)}
+                    </select>
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-slate-600">Tình trạng <span className="text-red-500 font-black">*</span></label>
+                    <select value={currentGeneral.TinhTrang || ''} onChange={e => setCurrentGeneral({...currentGeneral, TinhTrang: e.target.value})} className={`w-full px-3 py-2 border rounded-lg text-sm bg-slate-50 ${!currentGeneral.TinhTrang ? 'border-red-200' : ''}`}>
+                      <option value="">-- Chọn tình trạng --</option>
+                      {generalStatuses.map(st => <option key={st.id} value={st.name}>{st.name}</option>)}
+                    </select>
                   </div>
                   <div className="space-y-1">
                     <label className="text-xs font-bold text-slate-600">Diện quản lý</label>
                     <select value={currentGeneral.Dien || 'TW'} onChange={e => setCurrentGeneral({...currentGeneral, Dien: e.target.value as any})} className="w-full px-3 py-2 border rounded-lg text-sm bg-slate-50">
                       <option value="TW">TW (Trung ương)</option>
                       <option value="Thành ủy">Thành ủy</option>
-                    </select>
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-xs font-bold text-slate-600">Tình trạng <span className="text-red-500 font-black">*</span></label>
-                    <select value={currentGeneral.TinhTrang || ''} onChange={e => setCurrentGeneral({...currentGeneral, TinhTrang: e.target.value})} className="w-full px-3 py-2 border rounded-lg text-sm bg-slate-50">
-                      <option value="">-- Chọn tình trạng --</option>
-                      {generalStatuses.map(st => <option key={st.id} value={st.name}>{st.name}</option>)}
                     </select>
                   </div>
                   <div className="space-y-1">
@@ -222,7 +198,6 @@ const GeneralForm: React.FC<GeneralFormProps> = ({
                   </div>
                 )}
               </div>
-
               {!isEditing && generalsList.length > 0 && (
                 <div className="space-y-3">
                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2"><List size={14} /> Danh sách đang chờ lưu ({generalsList.length})</label>
