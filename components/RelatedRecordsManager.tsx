@@ -23,7 +23,7 @@ interface RelatedRecordsManagerProps {
   onDelete: (type: 'general' | 'merit' | 'medal' | 'policy' | 'social', id: string) => void;
 }
 
-const ITEMS_PER_PAGE = 5;
+const ITEMS_PER_PAGE = 10;
 
 const RelatedRecordsManager: React.FC<RelatedRecordsManagerProps> = ({
   house, generals, merits, medals, policies, socialProtections,
@@ -234,7 +234,6 @@ const RelatedRecordsManager: React.FC<RelatedRecordsManagerProps> = ({
                             </td>
                             <td className="px-6 py-4">
                               <span className={`text-xs font-black text-${cat.color}-700`}>
-                                {/* Use type assertions to safely access category-specific properties on union type */}
                                 {(item as any).LoaiDoiTuong || (item as any).Dien || (item as any).LoaiDienChinhSach || (item as any).LoaiDien}
                               </span>
                               {(item as any).SoTien > 0 && (
@@ -273,39 +272,39 @@ const RelatedRecordsManager: React.FC<RelatedRecordsManagerProps> = ({
                     </tbody>
                   </table>
 
-                  {/* Pagination Footer */}
+                  {/* Pagination Footer - Unified Design */}
                   {totalPages > 1 && (
                     <div className="px-6 py-3 border-t bg-slate-50/50 flex items-center justify-between">
-                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tight">
-                        Hiển thị {startIndex + 1} - {Math.min(startIndex + ITEMS_PER_PAGE, filteredData.length)} / {filteredData.length} kết quả
-                      </p>
+                      <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                        HIỂN THỊ {startIndex + 1} - {Math.min(startIndex + ITEMS_PER_PAGE, filteredData.length)} / {filteredData.length} KẾT QUẢ
+                      </div>
                       <div className="flex items-center gap-1">
                         <button 
                           onClick={() => handlePageChange(cat.id, currentPage - 1)}
                           disabled={currentPage === 1}
-                          className="p-1.5 rounded-lg border bg-white disabled:opacity-30 disabled:cursor-not-allowed hover:bg-slate-50 transition-colors"
+                          className="flex items-center justify-center w-8 h-8 rounded-lg border border-slate-200 bg-white disabled:opacity-30 disabled:cursor-not-allowed hover:bg-slate-50 transition-colors"
                         >
                           <ChevronLeft size={14} className="text-slate-600" />
                         </button>
                         
-                        {[...Array(totalPages)].map((_, i) => (
+                        {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
                           <button
-                            key={i}
-                            onClick={() => handlePageChange(cat.id, i + 1)}
-                            className={`w-7 h-7 rounded-lg text-[11px] font-black transition-all ${
-                              currentPage === i + 1 
-                                ? `bg-${cat.color}-600 text-white shadow-md shadow-${cat.color}-100` 
-                                : 'bg-white border text-slate-500 hover:bg-slate-50'
+                            key={page}
+                            onClick={() => handlePageChange(cat.id, page)}
+                            className={`flex items-center justify-center w-8 h-8 rounded-lg text-[11px] font-black transition-all ${
+                              currentPage === page 
+                                ? 'bg-indigo-600 text-white shadow-md shadow-indigo-100' 
+                                : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
                             }`}
                           >
-                            {i + 1}
+                            {page}
                           </button>
                         ))}
 
                         <button 
                           onClick={() => handlePageChange(cat.id, currentPage + 1)}
                           disabled={currentPage === totalPages}
-                          className="p-1.5 rounded-lg border bg-white disabled:opacity-30 disabled:cursor-not-allowed hover:bg-slate-50 transition-colors"
+                          className="flex items-center justify-center w-8 h-8 rounded-lg border border-slate-200 bg-white disabled:opacity-30 disabled:cursor-not-allowed hover:bg-slate-50 transition-colors"
                         >
                           <ChevronRight size={14} className="text-slate-600" />
                         </button>

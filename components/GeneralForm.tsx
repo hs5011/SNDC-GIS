@@ -105,8 +105,16 @@ const GeneralForm: React.FC<GeneralFormProps> = ({
     }
   };
 
-  // Fixed error: Added missing removeFromList function
+  const editFromList = (index: number) => {
+    setEditingTempIndex(index);
+    setCurrentGeneral(generalsList[index]);
+  };
+
   const removeFromList = (index: number) => {
+    if (editingTempIndex === index) {
+      setEditingTempIndex(null);
+      setCurrentGeneral({ Dien: 'TW', TinhTrang: '', HoTen: '', QuanHe: '', SoQuanLyHS: '', DiaChiThuongTru: '', NguoiNhanThay: '', GhiChu: '', HinhThucNhan: 'Tiền mặt' });
+    }
     setGeneralsList(prev => prev.filter((_, i) => i !== index));
   };
 
@@ -133,21 +141,21 @@ const GeneralForm: React.FC<GeneralFormProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[95vh] overflow-hidden flex flex-col">
-        <div className="flex items-center justify-between p-6 border-b">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[95vh] overflow-hidden flex flex-col border border-slate-200">
+        <div className="flex items-center justify-between p-6 border-b shrink-0">
           <h2 className="text-xl font-bold text-slate-900">{isEditing ? 'Sửa thông tin Tướng lĩnh' : 'Thêm hồ sơ Tướng lĩnh'}</h2>
-          <button onClick={onClose} className="p-2 hover:bg-slate-100 rounded-full"><X size={24} /></button>
+          <button onClick={onClose} className="p-2 hover:bg-slate-100 rounded-full transition-colors"><X size={24} /></button>
         </div>
 
         <div className="flex-1 overflow-y-auto p-6 space-y-8 custom-scrollbar">
           <div className="space-y-4">
             <label className="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
-              <Building size={14} className="text-blue-600" /> 1. Chọn số nhà liên kết <span className="text-red-500">*</span>
+              <Building size={14} className="text-blue-600" /> 1. Chọn số nhà liên kết <span className="text-red-500 font-black">*</span>
             </label>
             
             {!isEditing && !isHouseLocked && (
               <div className="relative">
-                <div className="flex items-center gap-2 px-3 py-2 border rounded-lg focus-within:ring-2 focus-within:ring-blue-500 bg-white">
+                <div className="flex items-center gap-2 px-3 py-2 border rounded-lg focus-within:ring-2 focus-within:ring-blue-500 bg-white shadow-sm">
                   <Search size={18} className="text-slate-400" />
                   <input type="text" placeholder="Tìm tên chủ hộ, số nhà, đường, CCCD..." className="w-full outline-none text-sm" value={houseSearch} onChange={(e) => setHouseSearch(e.target.value)} />
                 </div>
@@ -185,8 +193,8 @@ const GeneralForm: React.FC<GeneralFormProps> = ({
                 )}
               </div>
             ) : (
-              <div className="border-2 border-dashed border-slate-200 rounded-xl p-6 text-center bg-slate-50/50">
-                <p className="text-sm text-slate-400 italic">Vui lòng nhập từ khóa tìm kiếm để chọn một số nhà liên kết</p>
+              <div className="border-2 border-dashed border-slate-200 rounded-xl p-6 text-center bg-slate-50/50 italic text-slate-400 text-xs font-bold">
+                Vui lòng nhập từ khóa tìm kiếm để chọn một số nhà liên kết hồ sơ
               </div>
             )}
           </div>
@@ -200,7 +208,7 @@ const GeneralForm: React.FC<GeneralFormProps> = ({
               <div className="p-6 rounded-2xl border bg-slate-50/50 border-slate-200 space-y-4 shadow-inner">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-1">
-                    <label className="text-xs font-bold text-slate-600">Họ và tên <span className="text-red-500">*</span></label>
+                    <label className="text-xs font-bold text-slate-600">Họ và tên <span className="text-red-500 font-black">*</span></label>
                     <input value={currentGeneral.HoTen || ''} onChange={e => setCurrentGeneral({...currentGeneral, HoTen: e.target.value})} className="w-full px-3 py-2 border rounded-lg text-sm bg-white" placeholder="Họ và tên tướng lĩnh" />
                   </div>
                   <div className="space-y-1">
@@ -211,7 +219,7 @@ const GeneralForm: React.FC<GeneralFormProps> = ({
                     </select>
                   </div>
                   <div className="space-y-1">
-                    <label className="text-xs font-bold text-slate-600">Tình trạng <span className="text-red-500">*</span></label>
+                    <label className="text-xs font-bold text-slate-600">Tình trạng <span className="text-red-500 font-black">*</span></label>
                     <select value={currentGeneral.TinhTrang || ''} onChange={e => setCurrentGeneral({...currentGeneral, TinhTrang: e.target.value})} className="w-full px-3 py-2 border rounded-lg text-sm bg-white">
                       <option value="">-- Chọn tình trạng --</option>
                       {generalStatuses.map(st => <option key={st.id} value={st.name}>{st.name}</option>)}
@@ -227,8 +235,9 @@ const GeneralForm: React.FC<GeneralFormProps> = ({
                 </div>
                 {!isEditing && (
                   <div className="flex justify-end pt-2">
-                    <button type="button" onClick={handleAddToList} className="flex items-center gap-2 px-6 py-2 bg-slate-900 text-white rounded-xl text-xs font-bold hover:bg-black transition-colors">
-                      <Plus size={16} /> Thêm vào danh sách chờ
+                    <button type="button" onClick={handleAddToList} className={`flex items-center gap-2 px-6 py-2 rounded-xl text-xs font-black shadow-md transition-all active:scale-95 ${editingTempIndex !== null ? 'bg-indigo-600 hover:bg-indigo-700' : 'bg-slate-900 hover:bg-black'} text-white`}>
+                      {editingTempIndex !== null ? <RotateCcw size={16} /> : <Plus size={16} />}
+                      {editingTempIndex !== null ? 'Cập nhật mục đang sửa' : 'Thêm vào danh sách chờ'}
                     </button>
                   </div>
                 )}
@@ -241,18 +250,21 @@ const GeneralForm: React.FC<GeneralFormProps> = ({
                     <table className="w-full text-left text-xs">
                       <thead className="bg-slate-50 border-b">
                         <tr className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                          <th className="px-4 py-3">Họ tên</th>
-                          <th className="px-4 py-3">Diện / Tình trạng</th>
-                          <th className="px-4 py-3 text-right">Thao tác</th>
+                          <th className="px-6 py-3">Họ tên</th>
+                          <th className="px-6 py-3">Diện / Tình trạng</th>
+                          <th className="px-6 py-3 text-right">Thao tác</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y">
+                      <tbody className="divide-y divide-slate-100">
                         {generalsList.map((g, idx) => (
-                          <tr key={idx} className="hover:bg-slate-50 transition-colors">
-                            <td className="px-4 py-3 font-bold text-slate-700">{g.HoTen}</td>
-                            <td className="px-4 py-3"><span className="px-2 py-0.5 bg-slate-100 rounded text-slate-600 font-medium">{g.Dien} - {g.TinhTrang}</span></td>
-                            <td className="px-4 py-3 text-right">
-                              <button onClick={() => removeFromList(idx)} className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg transition-colors"><Trash2 size={14} /></button>
+                          <tr key={idx} className={`hover:bg-indigo-50/30 transition-colors ${editingTempIndex === idx ? 'bg-indigo-50/50' : ''}`}>
+                            <td className="px-6 py-3 font-bold text-slate-700">{g.HoTen}</td>
+                            <td className="px-6 py-3"><span className="px-2 py-0.5 bg-slate-100 rounded text-slate-600 font-bold border">{g.Dien} - {g.TinhTrang}</span></td>
+                            <td className="px-6 py-3 text-right">
+                              <div className="flex justify-end gap-1">
+                                <button onClick={() => editFromList(idx)} className="p-1.5 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors" title="Sửa mục này"><Edit size={14} /></button>
+                                <button onClick={() => removeFromList(idx)} className="p-1.5 text-red-500 hover:bg-red-100 rounded-lg transition-colors" title="Xóa mục này"><Trash2 size={14} /></button>
+                              </div>
                             </td>
                           </tr>
                         ))}

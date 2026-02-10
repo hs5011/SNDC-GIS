@@ -86,7 +86,16 @@ const MeritForm: React.FC<MeritFormProps> = ({
     }
   };
 
+  const editFromList = (index: number) => {
+    setEditingTempIndex(index);
+    setCurrentMerit(meritsList[index]);
+  };
+
   const removeFromList = (index: number) => {
+    if (editingTempIndex === index) {
+      setEditingTempIndex(null);
+      setCurrentMerit({ HoTen: '', QuanHe: '', LoaiDoiTuong: '', SoQuanLyHS: '', SoTien: 0, NguoiNhanThay: '', GhiChu: '', HinhThucNhan: 'Tiền mặt' });
+    }
     setMeritsList(prev => prev.filter((_, i) => i !== index));
   };
 
@@ -124,7 +133,7 @@ const MeritForm: React.FC<MeritFormProps> = ({
             <label className="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center gap-2"><Building size={14} className="text-blue-600" /> 1. Chọn số nhà liên kết <span className="text-red-500 font-black">*</span></label>
             {!isEditing && !isHouseLocked && (
               <div className="relative">
-                <div className="flex items-center gap-2 px-3 py-2 border rounded-lg bg-white focus-within:ring-2 focus-within:ring-blue-500">
+                <div className="flex items-center gap-2 px-3 py-2 border rounded-lg bg-white focus-within:ring-2 focus-within:ring-blue-500 shadow-sm">
                   <Search size={18} className="text-slate-400" />
                   <input type="text" placeholder="Tìm tên chủ hộ, số nhà, đường, CCCD..." className="w-full text-sm outline-none" value={houseSearch} onChange={(e) => setHouseSearch(e.target.value)} />
                 </div>
@@ -193,8 +202,9 @@ const MeritForm: React.FC<MeritFormProps> = ({
                 </div>
                 {!isEditing && (
                   <div className="flex justify-end pt-2">
-                    <button type="button" onClick={handleAddToList} className="flex items-center gap-2 px-6 py-2 bg-slate-900 text-white rounded-xl text-xs font-bold hover:bg-black transition-colors">
-                      <Plus size={16} /> Thêm vào danh sách chờ
+                    <button type="button" onClick={handleAddToList} className={`flex items-center gap-2 px-6 py-2 rounded-xl text-xs font-black shadow-md transition-all active:scale-95 ${editingTempIndex !== null ? 'bg-indigo-600 hover:bg-indigo-700' : 'bg-slate-900 hover:bg-black'} text-white`}>
+                      {editingTempIndex !== null ? <RotateCcw size={16} /> : <Plus size={16} />}
+                      {editingTempIndex !== null ? 'Cập nhật mục này' : 'Thêm vào danh sách chờ'}
                     </button>
                   </div>
                 )}
@@ -213,14 +223,17 @@ const MeritForm: React.FC<MeritFormProps> = ({
                           <th className="px-6 py-3 text-right">Thao tác</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y">
+                      <tbody className="divide-y divide-slate-100">
                         {meritsList.map((m, idx) => (
-                          <tr key={idx} className="hover:bg-rose-50/30 transition-colors">
+                          <tr key={idx} className={`hover:bg-rose-50/30 transition-colors ${editingTempIndex === idx ? 'bg-rose-50/50' : ''}`}>
                             <td className="px-6 py-3 font-bold text-slate-700">{m.HoTen}</td>
-                            <td className="px-6 py-3"><span className="text-rose-600 font-semibold">{m.LoaiDoiTuong}</span></td>
+                            <td className="px-6 py-3"><span className="text-rose-600 font-bold px-2 py-0.5 bg-rose-50 border border-rose-100 rounded">{m.LoaiDoiTuong}</span></td>
                             <td className="px-6 py-3 text-right font-bold text-emerald-600">{(m.SoTien || 0).toLocaleString()}</td>
                             <td className="px-6 py-3 text-right">
-                              <button onClick={() => removeFromList(idx)} className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg transition-colors"><Trash2 size={14} /></button>
+                              <div className="flex justify-end gap-1">
+                                <button onClick={() => editFromList(idx)} className="p-1.5 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors" title="Sửa mục này"><Edit size={14} /></button>
+                                <button onClick={() => removeFromList(idx)} className="p-1.5 text-red-500 hover:bg-red-100 rounded-lg transition-colors" title="Xóa mục này"><Trash2 size={14} /></button>
+                              </div>
                             </td>
                           </tr>
                         ))}

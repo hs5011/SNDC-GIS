@@ -1,9 +1,8 @@
-
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { 
   Search, Plus, Map as MapIcon, List, Filter, 
   Trash2, Edit, CheckCircle, AlertCircle,
-  Home, Database, MapPin, Milestone, Building2, Landmark, Info, Layers, Eye, EyeOff, Globe, Users, ShieldAlert, Heart, Wallet, Award, ShieldCheck, Scale, HandHeart, BarChart3, FileSpreadsheet, Download
+  Home, Database, MapPin, Milestone, Building2, Landmark, Info, Layers, Eye, EyeOff, Globe, Users, ShieldAlert, Heart, Wallet, Award, ShieldCheck, Scale, HandHeart, BarChart3, FileSpreadsheet, Download, ChevronLeft, ChevronRight
 } from 'lucide-react';
 import { HouseNumberRecord, Street, Neighborhood, PublicLandRecord, WardBoundary, RelationshipType, GeneralRecord, GeneralStatus, MeritRecord, MeritType, MedalRecord, MedalType, PolicyRecord, PolicyType, SocialProtectionRecord, SocialProtectionType, Bank } from './types';
 import { INITIAL_DATA, INITIAL_STREETS, INITIAL_NEIGHBORHOODS, INITIAL_PUBLIC_LAND, INITIAL_WARD_BOUNDARY, INITIAL_RELATIONSHIPS, INITIAL_GENERAL_STATUS, INITIAL_MERIT_TYPES, INITIAL_MEDAL_TYPES, INITIAL_POLICY_TYPES, INITIAL_SOCIAL_PROTECTION_TYPES, INITIAL_BANKS } from './constants';
@@ -31,6 +30,8 @@ import RelatedRecordsManager from './components/RelatedRecordsManager';
 
 type SidebarTab = 'records' | 'search_by_house' | 'public_land' | 'generals' | 'medals' | 'merits' | 'policies' | 'social_protections' | 'planning' | 'reports' | 'streets' | 'neighborhoods' | 'ward_boundary' | 'relationships' | 'general_statuses' | 'merit_types' | 'medal_types' | 'policy_types' | 'social_protection_types' | 'bank_management';
 
+const ITEMS_PER_PAGE = 10;
+
 const App: React.FC = () => {
   const [activeSidebarTab, setActiveSidebarTab] = useState<SidebarTab>('records');
   const [records, setRecords] = useState<HouseNumberRecord[]>(INITIAL_DATA);
@@ -53,6 +54,7 @@ const App: React.FC = () => {
   
   const [searchTerm, setSearchTerm] = useState('');
   const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
+  const [currentPage, setCurrentPage] = useState(1);
   
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingRecord, setEditingRecord] = useState<HouseNumberRecord | undefined>(undefined);
@@ -106,6 +108,10 @@ const App: React.FC = () => {
   const [editingBank, setEditingBank] = useState<Bank | undefined>(undefined);
 
   const [activeFilter, setActiveFilter] = useState<'all' | 'active' | 'inactive'>('active');
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [activeSidebarTab, searchTerm, activeFilter]);
 
   const getHouseAddress = (houseId?: string) => {
     if (!houseId) return '';
@@ -757,6 +763,11 @@ const App: React.FC = () => {
     );
   };
 
+  const getPaginatedData = (data: any[]) => {
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    return data.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+  };
+
   const renderContent = () => {
     switch(activeSidebarTab) {
       case 'records':
@@ -793,7 +804,7 @@ const App: React.FC = () => {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
-                      {filteredRecords.map(record => (
+                      {getPaginatedData(filteredRecords).map(record => (
                         <tr key={record.id} className="hover:bg-blue-50/30 transition-colors group">
                           <td className="px-6 py-4">
                             <div className="flex items-center gap-3">
@@ -828,6 +839,7 @@ const App: React.FC = () => {
                   <div className="h-full w-full"><MapView center={[10.7719, 106.6983]} markers={filteredRecords.map(r => ({ id: r.id, lat: r.X, lng: r.Y, label: `${r.SoNha} ${r.Duong}` }))} /></div>
                 )}
               </div>
+              {viewMode === 'list' && <Pagination totalItems={filteredRecords.length} currentPage={currentPage} onPageChange={setCurrentPage} />}
             </div>
           </div>
         );
@@ -876,7 +888,7 @@ const App: React.FC = () => {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
-                      {filteredPublicLand.map(land => (
+                      {getPaginatedData(filteredPublicLand).map(land => (
                         <tr key={land.id} className="hover:bg-amber-50/30 transition-colors group">
                           <td className="px-6 py-4">
                             <p className="text-sm font-bold text-slate-800">T{land.To} - Th{land.Thua}</p>
@@ -913,51 +925,43 @@ const App: React.FC = () => {
                   </div>
                 )}
               </div>
+              {viewMode === 'list' && <Pagination totalItems={filteredPublicLand.length} currentPage={currentPage} onPageChange={setCurrentPage} />}
             </div>
           </div>
         );
       case 'bank_management':
         return (
-          <div className="flex-1 p-6 flex flex-col gap-6">
+          <div className="flex-1 p-6 flex flex-col gap-6 overflow-hidden">
             <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2"><Landmark className="text-blue-700" /> Quản lý danh mục Ngân hàng</h2>
-            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-              <table className="w-full text-left">
-                <thead className="bg-slate-50 border-b">
-                  <tr className="text-[10px] font-bold uppercase text-slate-400">
-                    <th className="px-6 py-4 w-24">Mã</th>
-                    <th className="px-6 py-4 w-40">Viết tắt</th>
-                    <th className="px-6 py-4">Tên đầy đủ ngân hàng</th>
-                    <th className="px-6 py-4 text-right">Thao tác</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y">
-                  {filteredBanks.map(bank => (
-                    <tr key={bank.id} className="hover:bg-slate-50 group">
-                      <td className="px-6 py-4 font-mono text-xs text-blue-600">{bank.code || '--'}</td>
-                      <td className="px-6 py-4 font-bold text-slate-800">{bank.shortName}</td>
-                      <td className="px-6 py-4 text-sm text-slate-600">{bank.name}</td>
-                      <td className="px-6 py-4 text-right">
-                        <button onClick={() => { setEditingBank(bank); setIsBankFormOpen(true); }} className="p-1.5 hover:bg-blue-100 text-blue-600 rounded-lg"><Edit size={14} /></button>
-                        <button onClick={() => handleDeleteBank(bank.id)} className="p-1.5 hover:bg-red-100 text-red-600 rounded-lg ml-2"><Trash2 size={14} /></button>
-                      </td>
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
+              <div className="flex-1 overflow-auto">
+                <table className="w-full text-left">
+                  <thead className="bg-slate-50 border-b">
+                    <tr className="text-[10px] font-bold uppercase text-slate-400">
+                      <th className="px-6 py-4 w-24">Mã</th>
+                      <th className="px-6 py-4 w-40">Viết tắt</th>
+                      <th className="px-6 py-4">Tên đầy đủ ngân hàng</th>
+                      <th className="px-6 py-4 text-right">Thao tác</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody className="divide-y">
+                    {getPaginatedData(filteredBanks).map(bank => (
+                      <tr key={bank.id} className="hover:bg-slate-50 group">
+                        <td className="px-6 py-4 font-mono text-xs text-blue-600">{bank.code || '--'}</td>
+                        <td className="px-6 py-4 font-bold text-slate-800">{bank.shortName}</td>
+                        <td className="px-6 py-4 text-sm text-slate-600">{bank.name}</td>
+                        <td className="px-6 py-4 text-right">
+                          <button onClick={() => { setEditingBank(bank); setIsBankFormOpen(true); }} className="p-1.5 hover:bg-blue-100 text-blue-600 rounded-lg"><Edit size={14} /></button>
+                          <button onClick={() => handleDeleteBank(bank.id)} className="p-1.5 hover:bg-red-100 text-red-600 rounded-lg ml-2"><Trash2 size={14} /></button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <Pagination totalItems={filteredBanks.length} currentPage={currentPage} onPageChange={setCurrentPage} />
             </div>
           </div>
-        );
-      case 'reports':
-        return (
-          <ReportsView 
-            records={records}
-            publicLands={publicLands}
-            generals={generals}
-            merits={merits}
-            medals={medals}
-            policies={policies}
-            socialProtections={socialProtections}
-          />
         );
       case 'generals':
         return (
@@ -989,7 +993,7 @@ const App: React.FC = () => {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
-                    {filteredGenerals.map(general => (
+                    {getPaginatedData(filteredGenerals).map(general => (
                       <tr key={general.id} className="hover:bg-indigo-50/30 transition-colors group">
                         <td className="px-6 py-4">
                           <p className="text-sm font-bold text-slate-800">{general.HoTen}</p>
@@ -1016,6 +1020,7 @@ const App: React.FC = () => {
                   </tbody>
                 </table>
               </div>
+              <Pagination totalItems={filteredGenerals.length} currentPage={currentPage} onPageChange={setCurrentPage} />
             </div>
           </div>
         );
@@ -1049,7 +1054,7 @@ const App: React.FC = () => {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
-                    {filteredMerits.map(merit => (
+                    {getPaginatedData(filteredMerits).map(merit => (
                       <tr key={merit.id} className="hover:bg-rose-50/30 transition-colors group">
                         <td className="px-6 py-4">
                           <p className="text-sm font-bold text-slate-800">{merit.HoTen}</p>
@@ -1076,6 +1081,7 @@ const App: React.FC = () => {
                   </tbody>
                 </table>
               </div>
+              <Pagination totalItems={filteredMerits.length} currentPage={currentPage} onPageChange={setCurrentPage} />
             </div>
           </div>
         );
@@ -1109,7 +1115,7 @@ const App: React.FC = () => {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
-                    {filteredMedals.map(medal => (
+                    {getPaginatedData(filteredMedals).map(medal => (
                       <tr key={medal.id} className="hover:bg-amber-50/30 transition-colors group">
                         <td className="px-6 py-4">
                           <p className="text-sm font-bold text-slate-800">{medal.HoTen}</p>
@@ -1136,6 +1142,7 @@ const App: React.FC = () => {
                   </tbody>
                 </table>
               </div>
+              <Pagination totalItems={filteredMedals.length} currentPage={currentPage} onPageChange={setCurrentPage} />
             </div>
           </div>
         );
@@ -1168,7 +1175,7 @@ const App: React.FC = () => {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
-                    {filteredPolicies.map(policy => (
+                    {getPaginatedData(filteredPolicies).map(policy => (
                       <tr key={policy.id} className="hover:bg-indigo-50/30 transition-colors group">
                         <td className="px-6 py-4">
                           <p className="text-sm font-bold text-slate-800">{policy.HoTen}</p>
@@ -1195,6 +1202,7 @@ const App: React.FC = () => {
                   </tbody>
                 </table>
               </div>
+              <Pagination totalItems={filteredPolicies.length} currentPage={currentPage} onPageChange={setCurrentPage} />
             </div>
           </div>
         );
@@ -1228,7 +1236,7 @@ const App: React.FC = () => {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
-                    {filteredSocials.map(social => (
+                    {getPaginatedData(filteredSocials).map(social => (
                       <tr key={social.id} className="hover:bg-emerald-50/30 transition-colors group">
                         <td className="px-6 py-4">
                           <p className="text-sm font-bold text-slate-800">{social.HoTen}</p>
@@ -1255,187 +1263,209 @@ const App: React.FC = () => {
                   </tbody>
                 </table>
               </div>
+              <Pagination totalItems={filteredSocials.length} currentPage={currentPage} onPageChange={setCurrentPage} />
             </div>
           </div>
         );
       case 'general_statuses':
         return (
-          <div className="flex-1 p-6 flex flex-col gap-6">
+          <div className="flex-1 p-6 flex flex-col gap-6 overflow-hidden">
             <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2"><Info className="text-slate-600" /> Quản lý danh mục Tình trạng tướng lĩnh</h2>
-            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-              <table className="w-full text-left">
-                <thead className="bg-slate-50 border-b">
-                  <tr className="text-[10px] font-bold uppercase text-slate-400"><th className="px-6 py-4">Mã</th><th className="px-6 py-4">Tên tình trạng</th><th className="px-6 py-4 text-right">Thao tác</th></tr>
-                </thead>
-                <tbody className="divide-y">
-                  {generalStatuses.filter(s => s.name.toLowerCase().includes(searchTerm.toLowerCase()) || s.code.toLowerCase().includes(searchTerm.toLowerCase())).map(st => (
-                    <tr key={st.id} className="hover:bg-slate-50">
-                      <td className="px-6 py-4 font-mono text-xs text-slate-500">{st.code}</td>
-                      <td className="px-6 py-4 text-sm font-semibold text-slate-700">{st.name}</td>
-                      <td className="px-6 py-4 text-right">
-                        <button onClick={() => { setEditingGs(st); setIsGsFormOpen(true); }} className="p-1.5 hover:bg-slate-100 text-slate-600 rounded-lg"><Edit size={14} /></button>
-                        <button onClick={() => handleDeleteGs(st.id)} className="p-1.5 hover:bg-red-100 text-red-600 rounded-lg ml-2"><Trash2 size={14} /></button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
+              <div className="flex-1 overflow-auto">
+                <table className="w-full text-left">
+                  <thead className="bg-slate-50 border-b">
+                    <tr className="text-[10px] font-bold uppercase text-slate-400"><th className="px-6 py-4">Mã</th><th className="px-6 py-4">Tên tình trạng</th><th className="px-6 py-4 text-right">Thao tác</th></tr>
+                  </thead>
+                  <tbody className="divide-y">
+                    {getPaginatedData(generalStatuses.filter(s => s.name.toLowerCase().includes(searchTerm.toLowerCase()) || s.code.toLowerCase().includes(searchTerm.toLowerCase()))).map(st => (
+                      <tr key={st.id} className="hover:bg-slate-50">
+                        <td className="px-6 py-4 font-mono text-xs text-slate-500">{st.code}</td>
+                        <td className="px-6 py-4 text-sm font-semibold text-slate-700">{st.name}</td>
+                        <td className="px-6 py-4 text-right">
+                          <button onClick={() => { setEditingGs(st); setIsGsFormOpen(true); }} className="p-1.5 hover:bg-slate-100 text-slate-600 rounded-lg"><Edit size={14} /></button>
+                          <button onClick={() => handleDeleteGs(st.id)} className="p-1.5 hover:bg-red-100 text-red-600 rounded-lg ml-2"><Trash2 size={14} /></button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <Pagination totalItems={generalStatuses.length} currentPage={currentPage} onPageChange={setCurrentPage} />
             </div>
           </div>
         );
       case 'merit_types':
         return (
-          <div className="flex-1 p-6 flex flex-col gap-6">
+          <div className="flex-1 p-6 flex flex-col gap-6 overflow-hidden">
             <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2"><Heart className="text-rose-600" /> Quản lý danh mục Loại đối tượng NCC</h2>
-            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-              <table className="w-full text-left">
-                <thead className="bg-slate-50 border-b">
-                  <tr className="text-[10px] font-bold uppercase text-slate-400"><th className="px-6 py-4">Mã</th><th className="px-6 py-4">Tên loại đối tượng</th><th className="px-6 py-4 text-right">Thao tác</th></tr>
-                </thead>
-                <tbody className="divide-y">
-                  {meritTypes.filter(m => m.name.toLowerCase().includes(searchTerm.toLowerCase()) || m.code.toLowerCase().includes(searchTerm.toLowerCase())).map(mt => (
-                    <tr key={mt.id} className="hover:bg-rose-50">
-                      <td className="px-6 py-4 font-mono text-xs text-rose-500">{mt.code}</td>
-                      <td className="px-6 py-4 text-sm font-semibold text-slate-700">{mt.name}</td>
-                      <td className="px-6 py-4 text-right">
-                        <button onClick={() => { setEditingMt(mt); setIsMtFormOpen(true); }} className="p-1.5 hover:bg-rose-100 text-rose-600 rounded-lg"><Edit size={14} /></button>
-                        <button onClick={() => handleDeleteMt(mt.id)} className="p-1.5 hover:bg-red-100 text-red-600 rounded-lg ml-2"><Trash2 size={14} /></button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
+              <div className="flex-1 overflow-auto">
+                <table className="w-full text-left">
+                  <thead className="bg-slate-50 border-b">
+                    <tr className="text-[10px] font-bold uppercase text-slate-400"><th className="px-6 py-4">Mã</th><th className="px-6 py-4">Tên loại đối tượng</th><th className="px-6 py-4 text-right">Thao tác</th></tr>
+                  </thead>
+                  <tbody className="divide-y">
+                    {getPaginatedData(meritTypes.filter(m => m.name.toLowerCase().includes(searchTerm.toLowerCase()) || m.code.toLowerCase().includes(searchTerm.toLowerCase()))).map(mt => (
+                      <tr key={mt.id} className="hover:bg-rose-50">
+                        <td className="px-6 py-4 font-mono text-xs text-rose-500">{mt.code}</td>
+                        <td className="px-6 py-4 text-sm font-semibold text-slate-700">{mt.name}</td>
+                        <td className="px-6 py-4 text-right">
+                          <button onClick={() => { setEditingMt(mt); setIsMtFormOpen(true); }} className="p-1.5 hover:bg-rose-100 text-rose-600 rounded-lg"><Edit size={14} /></button>
+                          <button onClick={() => handleDeleteMt(mt.id)} className="p-1.5 hover:bg-red-100 text-red-600 rounded-lg ml-2"><Trash2 size={14} /></button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <Pagination totalItems={meritTypes.length} currentPage={currentPage} onPageChange={setCurrentPage} />
             </div>
           </div>
         );
       case 'medal_types':
         return (
-          <div className="flex-1 p-6 flex flex-col gap-6">
+          <div className="flex-1 p-6 flex flex-col gap-6 overflow-hidden">
             <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2"><Award className="text-amber-600" /> Quản lý danh mục Loại huân chương</h2>
-            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-              <table className="w-full text-left">
-                <thead className="bg-slate-50 border-b">
-                  <tr className="text-[10px] font-bold uppercase text-slate-400"><th className="px-6 py-4">Mã</th><th className="px-6 py-4">Tên loại huân chương/huy chương</th><th className="px-6 py-4 text-right">Thao tác</th></tr>
-                </thead>
-                <tbody className="divide-y">
-                  {medalTypes.filter(m => m.name.toLowerCase().includes(searchTerm.toLowerCase()) || m.code.toLowerCase().includes(searchTerm.toLowerCase())).map(md => (
-                    <tr key={md.id} className="hover:bg-amber-50">
-                      <td className="px-6 py-4 font-mono text-xs text-amber-600">{md.code}</td>
-                      <td className="px-6 py-4 text-sm font-semibold text-slate-700">{md.name}</td>
-                      <td className="px-6 py-4 text-right">
-                        <button onClick={() => { setEditingMdt(md); setIsMdtFormOpen(true); }} className="p-1.5 hover:bg-amber-100 text-amber-600 rounded-lg"><Edit size={14} /></button>
-                        <button onClick={() => handleDeleteMdt(md.id)} className="p-1.5 hover:bg-red-100 text-red-600 rounded-lg ml-2"><Trash2 size={14} /></button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
+              <div className="flex-1 overflow-auto">
+                <table className="w-full text-left">
+                  <thead className="bg-slate-50 border-b">
+                    <tr className="text-[10px] font-bold uppercase text-slate-400"><th className="px-6 py-4">Mã</th><th className="px-6 py-4">Tên loại huân chương/huy chương</th><th className="px-6 py-4 text-right">Thao tác</th></tr>
+                  </thead>
+                  <tbody className="divide-y">
+                    {getPaginatedData(medalTypes.filter(m => m.name.toLowerCase().includes(searchTerm.toLowerCase()) || m.code.toLowerCase().includes(searchTerm.toLowerCase()))).map(md => (
+                      <tr key={md.id} className="hover:bg-amber-50">
+                        <td className="px-6 py-4 font-mono text-xs text-amber-600">{md.code}</td>
+                        <td className="px-6 py-4 text-sm font-semibold text-slate-700">{md.name}</td>
+                        <td className="px-6 py-4 text-right">
+                          <button onClick={() => { setEditingMdt(md); setIsMdtFormOpen(true); }} className="p-1.5 hover:bg-amber-100 text-amber-600 rounded-lg"><Edit size={14} /></button>
+                          <button onClick={() => handleDeleteMdt(md.id)} className="p-1.5 hover:bg-red-100 text-red-600 rounded-lg ml-2"><Trash2 size={14} /></button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <Pagination totalItems={medalTypes.length} currentPage={currentPage} onPageChange={setCurrentPage} />
             </div>
           </div>
         );
       case 'policy_types':
         return (
-          <div className="flex-1 p-6 flex flex-col gap-6">
+          <div className="flex-1 p-6 flex flex-col gap-6 overflow-hidden">
             <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2"><ShieldCheck className="text-indigo-600" /> Quản lý danh mục Loại diện chính sách</h2>
-            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-              <table className="w-full text-left">
-                <thead className="bg-slate-50 border-b">
-                  <tr className="text-[10px] font-bold uppercase text-slate-400"><th className="px-6 py-4">Mã</th><th className="px-6 py-4">Tên diện chính sách</th><th className="px-6 py-4 text-right">Thao tác</th></tr>
-                </thead>
-                <tbody className="divide-y">
-                  {policyTypes.filter(p => p.name.toLowerCase().includes(searchTerm.toLowerCase()) || p.code.toLowerCase().includes(searchTerm.toLowerCase())).map(pt => (
-                    <tr key={pt.id} className="hover:bg-indigo-50">
-                      <td className="px-6 py-4 font-mono text-xs text-indigo-500">{pt.code}</td>
-                      <td className="px-6 py-4 text-sm font-semibold text-slate-700">{pt.name}</td>
-                      <td className="px-6 py-4 text-right">
-                        <button onClick={() => { setEditingPt(pt); setIsPtFormOpen(true); }} className="p-1.5 hover:bg-indigo-100 text-indigo-600 rounded-lg"><Edit size={14} /></button>
-                        <button onClick={() => handleDeletePt(pt.id)} className="p-1.5 hover:bg-red-100 text-red-600 rounded-lg ml-2"><Trash2 size={14} /></button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
+              <div className="flex-1 overflow-auto">
+                <table className="w-full text-left">
+                  <thead className="bg-slate-50 border-b">
+                    <tr className="text-[10px] font-bold uppercase text-slate-400"><th className="px-6 py-4">Mã</th><th className="px-6 py-4">Tên diện chính sách</th><th className="px-6 py-4 text-right">Thao tác</th></tr>
+                  </thead>
+                  <tbody className="divide-y">
+                    {getPaginatedData(policyTypes.filter(p => p.name.toLowerCase().includes(searchTerm.toLowerCase()) || p.code.toLowerCase().includes(searchTerm.toLowerCase()))).map(pt => (
+                      <tr key={pt.id} className="hover:bg-indigo-50">
+                        <td className="px-6 py-4 font-mono text-xs text-indigo-500">{pt.code}</td>
+                        <td className="px-6 py-4 text-sm font-semibold text-slate-700">{pt.name}</td>
+                        <td className="px-6 py-4 text-right">
+                          <button onClick={() => { setEditingPt(pt); setIsPtFormOpen(true); }} className="p-1.5 hover:bg-indigo-100 text-indigo-600 rounded-lg"><Edit size={14} /></button>
+                          <button onClick={() => handleDeletePt(pt.id)} className="p-1.5 hover:bg-red-100 text-red-600 rounded-lg ml-2"><Trash2 size={14} /></button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <Pagination totalItems={policyTypes.length} currentPage={currentPage} onPageChange={setCurrentPage} />
             </div>
           </div>
         );
       case 'streets':
         return (
-          <div className="flex-1 p-6 flex flex-col gap-6">
+          <div className="flex-1 p-6 flex flex-col gap-6 overflow-hidden">
             <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2"><Milestone className="text-blue-600" /> Quản lý danh mục Đường</h2>
-            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-              <table className="w-full text-left">
-                <thead className="bg-slate-50 border-b">
-                  <tr className="text-[10px] font-bold uppercase text-slate-400"><th className="px-6 py-4">Mã đường</th><th className="px-6 py-4">Tên đường</th><th className="px-6 py-4 text-right">Thao tác</th></tr>
-                </thead>
-                <tbody className="divide-y">
-                  {streets.filter(s => s.name.toLowerCase().includes(searchTerm.toLowerCase()) || s.code.toLowerCase().includes(searchTerm.toLowerCase())).map(st => (
-                    <tr key={st.id} className="hover:bg-slate-50">
-                      <td className="px-6 py-4 font-mono text-xs text-blue-600">{st.code}</td>
-                      <td className="px-6 py-4 text-sm font-semibold text-slate-700">{st.name}</td>
-                      <td className="px-6 py-4 text-right">
-                        <button onClick={() => { setEditingStreet(st); setIsStreetFormOpen(true); }} className="p-1.5 hover:bg-blue-100 text-blue-600 rounded-lg"><Edit size={14} /></button>
-                        <button onClick={() => handleDeleteStreet(st.id)} className="p-1.5 hover:bg-red-100 text-red-600 rounded-lg ml-2"><Trash2 size={14} /></button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
+              <div className="flex-1 overflow-auto">
+                <table className="w-full text-left">
+                  <thead className="bg-slate-50 border-b">
+                    <tr className="text-[10px] font-bold uppercase text-slate-400"><th className="px-6 py-4">Mã đường</th><th className="px-6 py-4">Tên đường</th><th className="px-6 py-4 text-right">Thao tác</th></tr>
+                  </thead>
+                  <tbody className="divide-y">
+                    {getPaginatedData(streets.filter(s => s.name.toLowerCase().includes(searchTerm.toLowerCase()) || s.code.toLowerCase().includes(searchTerm.toLowerCase()))).map(st => (
+                      <tr key={st.id} className="hover:bg-slate-50">
+                        <td className="px-6 py-4 font-mono text-xs text-blue-600">{st.code}</td>
+                        <td className="px-6 py-4 text-sm font-semibold text-slate-700">{st.name}</td>
+                        <td className="px-6 py-4 text-right">
+                          <button onClick={() => { setEditingStreet(st); setIsStreetFormOpen(true); }} className="p-1.5 hover:bg-blue-100 text-blue-600 rounded-lg"><Edit size={14} /></button>
+                          <button onClick={() => handleDeleteStreet(st.id)} className="p-1.5 hover:bg-red-100 text-red-600 rounded-lg ml-2"><Trash2 size={14} /></button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <Pagination totalItems={streets.length} currentPage={currentPage} onPageChange={setCurrentPage} />
             </div>
           </div>
         );
       case 'social_protection_types':
         return (
-          <div className="flex-1 p-6 flex flex-col gap-6">
+          <div className="flex-1 p-6 flex flex-col gap-6 overflow-hidden">
             <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2"><HandHeart className="text-emerald-600" /> Quản lý danh mục Loại diện bảo trợ</h2>
-            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-              <table className="w-full text-left">
-                <thead className="bg-slate-50 border-b">
-                  <tr className="text-[10px] font-bold uppercase text-slate-400"><th className="px-6 py-4">Mã diện</th><th className="px-6 py-4">Tên diện bảo trợ xã hội</th><th className="px-6 py-4 text-right">Thao tác</th></tr>
-                </thead>
-                <tbody className="divide-y">
-                  {socialProtectionTypes.filter(s => s.name.toLowerCase().includes(searchTerm.toLowerCase()) || s.code.toLowerCase().includes(searchTerm.toLowerCase())).map(spt => (
-                    <tr key={spt.id} className="hover:bg-emerald-50">
-                      <td className="px-6 py-4 font-mono text-xs text-emerald-600">{spt.code}</td>
-                      <td className="px-6 py-4 text-sm font-semibold text-slate-700">{spt.name}</td>
-                      <td className="px-6 py-4 text-right">
-                        <button onClick={() => { setEditingSpt(spt); setIsSptFormOpen(true); }} className="p-1.5 hover:bg-emerald-100 text-emerald-600 rounded-lg"><Edit size={14} /></button>
-                        <button onClick={() => handleDeleteSpt(spt.id)} className="p-1.5 hover:bg-red-100 text-red-600 rounded-lg ml-2"><Trash2 size={14} /></button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
+              <div className="flex-1 overflow-auto">
+                <table className="w-full text-left">
+                  <thead className="bg-slate-50 border-b">
+                    <tr className="text-[10px] font-bold uppercase text-slate-400"><th className="px-6 py-4">Mã diện</th><th className="px-6 py-4">Tên diện bảo trợ xã hội</th><th className="px-6 py-4 text-right">Thao tác</th></tr>
+                  </thead>
+                  <tbody className="divide-y">
+                    {getPaginatedData(socialProtectionTypes.filter(s => s.name.toLowerCase().includes(searchTerm.toLowerCase()) || s.code.toLowerCase().includes(searchTerm.toLowerCase()))).map(spt => (
+                      <tr key={spt.id} className="hover:bg-emerald-50">
+                        <td className="px-6 py-4 font-mono text-xs text-emerald-600">{spt.code}</td>
+                        <td className="px-6 py-4 text-sm font-semibold text-slate-700">{spt.name}</td>
+                        <td className="px-6 py-4 text-right">
+                          <button onClick={() => { setEditingSpt(spt); setIsSptFormOpen(true); }} className="p-1.5 hover:bg-emerald-100 text-emerald-600 rounded-lg"><Edit size={14} /></button>
+                          <button onClick={() => handleDeleteSpt(spt.id)} className="p-1.5 hover:bg-red-100 text-red-600 rounded-lg ml-2"><Trash2 size={14} /></button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <Pagination totalItems={socialProtectionTypes.length} currentPage={currentPage} onPageChange={setCurrentPage} />
             </div>
           </div>
         );
       case 'relationships':
         return (
-          <div className="flex-1 p-6 flex flex-col gap-6">
+          <div className="flex-1 p-6 flex flex-col gap-6 overflow-hidden">
             <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2"><Users className="text-pink-600" /> Quản lý danh mục Mối quan hệ với chủ hộ</h2>
-            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-              <table className="w-full text-left">
-                <thead className="bg-slate-50 border-b">
-                  <tr className="text-[10px] font-bold uppercase text-slate-400"><th className="px-6 py-4">Mã</th><th className="px-6 py-4">Tên mối quan hệ với chủ hộ</th><th className="px-6 py-4 text-right">Thao tác</th></tr>
-                </thead>
-                <tbody className="divide-y">
-                  {relationships.filter(r => r.name.toLowerCase().includes(searchTerm.toLowerCase()) || r.code.toLowerCase().includes(searchTerm.toLowerCase())).map(rel => (
-                    <tr key={rel.id} className="hover:bg-slate-50">
-                      <td className="px-6 py-4 font-mono text-xs text-pink-600">{rel.code}</td>
-                      <td className="px-6 py-4 text-sm font-semibold text-slate-700">{rel.name}</td>
-                      <td className="px-6 py-4 text-right">
-                        <button onClick={() => { setEditingRel(rel); setIsRelFormOpen(true); }} className="p-1.5 hover:bg-pink-100 text-pink-600 rounded-lg"><Edit size={14} /></button>
-                        <button onClick={() => handleDeleteRel(rel.id)} className="p-1.5 hover:bg-red-100 text-red-600 rounded-lg ml-2"><Trash2 size={14} /></button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
+              <div className="flex-1 overflow-auto">
+                <table className="w-full text-left">
+                  <thead className="bg-slate-50 border-b">
+                    <tr className="text-[10px] font-bold uppercase text-slate-400"><th className="px-6 py-4">Mã</th><th className="px-6 py-4">Tên mối quan hệ với chủ hộ</th><th className="px-6 py-4 text-right">Thao tác</th></tr>
+                  </thead>
+                  <tbody className="divide-y">
+                    {getPaginatedData(relationships.filter(r => r.name.toLowerCase().includes(searchTerm.toLowerCase()) || r.code.toLowerCase().includes(searchTerm.toLowerCase()))).map(rel => (
+                      <tr key={rel.id} className="hover:bg-slate-50">
+                        <td className="px-6 py-4 font-mono text-xs text-pink-600">{rel.code}</td>
+                        <td className="px-6 py-4 text-sm font-semibold text-slate-700">{rel.name}</td>
+                        <td className="px-6 py-4 text-right">
+                          <button onClick={() => { setEditingRel(rel); setIsRelFormOpen(true); }} className="p-1.5 hover:bg-pink-100 text-pink-600 rounded-lg"><Edit size={14} /></button>
+                          <button onClick={() => handleDeleteRel(rel.id)} className="p-1.5 hover:bg-red-100 text-red-600 rounded-lg ml-2"><Trash2 size={14} /></button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <Pagination totalItems={relationships.length} currentPage={currentPage} onPageChange={setCurrentPage} />
             </div>
           </div>
         );
       case 'neighborhoods':
         return (
-          <div className="flex-1 p-6 flex flex-col gap-6">
+          <div className="flex-1 p-6 flex flex-col gap-6 overflow-hidden">
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2"><Building2 className="text-blue-600" /> Quản lý danh mục Khu phố / KDC</h2>
               <button 
@@ -1448,30 +1478,35 @@ const App: React.FC = () => {
             </div>
             <div className="bg-white rounded-2xl border border-slate-200 shadow-sm flex-1 flex flex-col overflow-hidden">
               {viewMode === 'list' ? (
-                <table className="w-full text-left border-collapse">
-                  <thead className="bg-slate-50 border-b">
-                    <tr className="text-[10px] font-bold uppercase text-slate-400"><th className="px-6 py-4">Tên khu phố MỚI</th><th className="px-6 py-4">Tên khu phố CŨ</th><th className="px-6 py-4">Ranh giới</th><th className="px-6 py-4 text-right">Thao tác</th></tr>
-                  </thead>
-                  <tbody className="divide-y">
-                    {neighborhoods.filter(n => n.nameNew.toLowerCase().includes(searchTerm.toLowerCase()) || n.nameOld.toLowerCase().includes(searchTerm.toLowerCase())).map(nb => (
-                      <tr key={nb.id} className="hover:bg-slate-50">
-                        <td className="px-6 py-4 text-sm font-semibold text-slate-700">{nb.nameNew}</td>
-                        <td className="px-6 py-4 text-sm text-slate-500">{nb.nameOld}</td>
-                        <td className="px-6 py-4">
-                          {nb.geometry && nb.geometry.length > 0 ? (
-                            <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100">Đã vẽ ranh giới</span>
-                          ) : (
-                            <span className="text-[10px] font-bold text-slate-400 bg-slate-50 px-2 py-0.5 rounded border border-slate-100 italic">Chưa xác định</span>
-                          )}
-                        </td>
-                        <td className="px-6 py-4 text-right">
-                          <button onClick={() => { setEditingNb(nb); setIsNbFormOpen(true); }} className="p-1.5 hover:bg-blue-100 text-blue-600 rounded-lg transition-colors"><Edit size={14} /></button>
-                          <button onClick={() => handleDeleteNb(nb.id)} className="p-1.5 hover:bg-red-100 text-red-600 rounded-lg ml-2 transition-colors"><Trash2 size={14} /></button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                <>
+                  <div className="flex-1 overflow-auto">
+                    <table className="w-full text-left border-collapse">
+                      <thead className="bg-slate-50 border-b">
+                        <tr className="text-[10px] font-bold uppercase text-slate-400"><th className="px-6 py-4">Tên khu phố MỚI</th><th className="px-6 py-4">Tên khu phố CŨ</th><th className="px-6 py-4">Ranh giới</th><th className="px-6 py-4 text-right">Thao tác</th></tr>
+                      </thead>
+                      <tbody className="divide-y">
+                        {getPaginatedData(neighborhoods.filter(n => n.nameNew.toLowerCase().includes(searchTerm.toLowerCase()) || n.nameOld.toLowerCase().includes(searchTerm.toLowerCase()))).map(nb => (
+                          <tr key={nb.id} className="hover:bg-slate-50">
+                            <td className="px-6 py-4 text-sm font-semibold text-slate-700">{nb.nameNew}</td>
+                            <td className="px-6 py-4 text-sm text-slate-500">{nb.nameOld}</td>
+                            <td className="px-6 py-4">
+                              {nb.geometry && nb.geometry.length > 0 ? (
+                                <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100">Đã vẽ ranh giới</span>
+                              ) : (
+                                <span className="text-[10px] font-bold text-slate-400 bg-slate-50 px-2 py-0.5 rounded border border-slate-100 italic">Chưa xác định</span>
+                              )}
+                            </td>
+                            <td className="px-6 py-4 text-right">
+                              <button onClick={() => { setEditingNb(nb); setIsNbFormOpen(true); }} className="p-1.5 hover:bg-blue-100 text-blue-600 rounded-lg transition-colors"><Edit size={14} /></button>
+                              <button onClick={() => handleDeleteNb(nb.id)} className="p-1.5 hover:bg-red-100 text-red-600 rounded-lg ml-2 transition-colors"><Trash2 size={14} /></button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  <Pagination totalItems={neighborhoods.length} currentPage={currentPage} onPageChange={setCurrentPage} />
+                </>
               ) : (
                 <div className="flex-1">
                   <MapView 
@@ -1577,6 +1612,18 @@ const App: React.FC = () => {
                 </div>
              </div>
           </div>
+        );
+      case 'reports':
+        return (
+          <ReportsView 
+            records={records}
+            publicLands={publicLands}
+            generals={generals}
+            merits={merits}
+            medals={medals}
+            policies={policies}
+            socialProtections={socialProtections}
+          />
         );
       default: return null;
     }
@@ -1778,5 +1825,49 @@ const LayerToggle: React.FC<{ active: boolean; onClick: () => void; label: strin
     {active ? <Eye size={14} /> : <EyeOff size={14} className="opacity-40" />}
   </button>
 );
+
+const Pagination: React.FC<{ totalItems: number; currentPage: number; onPageChange: (page: number) => void }> = ({ totalItems, currentPage, onPageChange }) => {
+  const totalPages = Math.ceil(totalItems / ITEMS_PER_PAGE);
+  if (totalPages <= 1) return null;
+
+  return (
+    <div className="px-6 py-3 border-t bg-slate-50/50 flex items-center justify-between shrink-0">
+      <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+        HIỂN THỊ {(currentPage - 1) * ITEMS_PER_PAGE + 1} - {Math.min(currentPage * ITEMS_PER_PAGE, totalItems)} / {totalItems} KẾT QUẢ
+      </div>
+      <div className="flex items-center gap-1">
+        <button 
+          onClick={() => onPageChange(currentPage - 1)}
+          disabled={currentPage === 1}
+          className="flex items-center justify-center w-8 h-8 rounded-lg border border-slate-200 bg-white disabled:opacity-30 disabled:cursor-not-allowed hover:bg-slate-50 transition-colors"
+        >
+          <ChevronLeft size={14} className="text-slate-600" />
+        </button>
+        
+        {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+          <button
+            key={page}
+            onClick={() => onPageChange(page)}
+            className={`flex items-center justify-center w-8 h-8 rounded-lg text-[11px] font-black transition-all ${
+              currentPage === page 
+                ? 'bg-blue-600 text-white shadow-md shadow-blue-100' 
+                : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
+            }`}
+          >
+            {page}
+          </button>
+        ))}
+
+        <button 
+          onClick={() => onPageChange(currentPage + 1)}
+          disabled={currentPage === totalPages}
+          className="flex items-center justify-center w-8 h-8 rounded-lg border border-slate-200 bg-white disabled:opacity-30 disabled:cursor-not-allowed hover:bg-slate-50 transition-colors"
+        >
+          <ChevronRight size={14} className="text-slate-600" />
+        </button>
+      </div>
+    </div>
+  );
+};
 
 export default App;
