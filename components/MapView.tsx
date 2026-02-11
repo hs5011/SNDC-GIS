@@ -1,6 +1,7 @@
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
+import { Search, MapPin, Navigation, Loader2, X } from 'lucide-react';
 
 const setupLeafletIcons = () => {
   // @ts-ignore
@@ -33,6 +34,12 @@ const MapView: React.FC<MapViewProps> = ({
   const containerRef = useRef<HTMLDivElement>(null);
   const lastCenterRef = useRef<[number, number] | null>(null);
 
+  // Search state
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [showResults, setShowResults] = useState(false);
+
   useEffect(() => {
     setupLeafletIcons();
   }, []);
@@ -52,11 +59,9 @@ const MapView: React.FC<MapViewProps> = ({
       L.control.zoom({ position: 'bottomright' }).addTo(mapRef.current);
       lastCenterRef.current = center;
     } else {
-      // CHỈ re-center nếu tọa độ tâm thay đổi đáng kể (không phải do click thêm điểm)
       const currentMapCenter = mapRef.current.getCenter();
       const dist = Math.sqrt(Math.pow(currentMapCenter.lat - center[0], 2) + Math.pow(currentMapCenter.lng - center[1], 2));
       
-      // Nếu khoảng cách thay đổi lớn (> 0.001) mới nhảy tâm
       if (dist > 0.001 && !isSelectMode) {
         mapRef.current.setView(center, zoom);
       }
@@ -64,19 +69,16 @@ const MapView: React.FC<MapViewProps> = ({
 
     const currentMap = mapRef.current;
 
-    // Chỉ invalidateSize khi khởi tạo hoặc resize, tránh gọi liên tục
     const timer = setTimeout(() => {
       currentMap.invalidateSize();
     }, 100);
 
-    // Xóa layer cũ hiệu quả hơn bằng cách dùng group hoặc lọc
     currentMap.eachLayer((layer) => {
       if (layer instanceof L.Marker || layer instanceof L.Polygon) {
         currentMap.removeLayer(layer);
       }
     });
 
-    // Vẽ Polygons trước để marker đè lên trên
     polygons.forEach(p => {
       if (p.points && p.points.length > 2) {
         const poly = L.polygon(p.points, {
@@ -94,7 +96,6 @@ const MapView: React.FC<MapViewProps> = ({
       }
     });
 
-    // Vẽ Markers
     markers.forEach(m => {
       if (!isNaN(m.lat) && !isNaN(m.lng)) {
         L.marker([m.lat, m.lng])
@@ -107,6 +108,7 @@ const MapView: React.FC<MapViewProps> = ({
       if (isSelectMode && onSelectLocation) {
         onSelectLocation(e.latlng.lat, e.latlng.lng);
       }
+      setShowResults(false);
     };
 
     currentMap.on('click', handleMapClick);
@@ -117,12 +119,99 @@ const MapView: React.FC<MapViewProps> = ({
     };
   }, [center, zoom, markers, polygons, isSelectMode, onSelectLocation]);
 
+  const handleSearch = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!searchQuery.trim()) return;
+
+    setIsSearching(true);
+    setShowResults(true);
+    try {
+      const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchQuery)}&addressdetails=1&limit=5&countrycodes=vn`);
+      const data = await response.json();
+      setSearchResults(data);
+    } catch (error) {
+      console.error("Lỗi tìm kiếm địa chỉ:", error);
+      setSearchResults([]);
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  const selectResult = (res: any) => {
+    const lat = parseFloat(res.lat);
+    const lon = parseFloat(res.lon);
+    if (mapRef.current) {
+      mapRef.current.setView([lat, lon], 17);
+      // Nếu là chế độ chọn điểm, có thể tự động chọn luôn điểm đó
+      if (isSelectMode && onSelectLocation) {
+        // onSelectLocation(lat, lon); // Mở comment nếu muốn tự động ghim điểm khi chọn kết quả tìm kiếm
+      }
+    }
+    setShowResults(false);
+    setSearchQuery(res.display_name);
+  };
+
   return (
-    <div className="relative w-full h-full border-t border-slate-100">
+    <div className="relative w-full h-full border-t border-slate-100 group">
       <div ref={containerRef} className="w-full h-full z-0" />
+      
+      {/* Search Bar Overlay */}
       {isSelectMode && (
-        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[1000] bg-blue-600 text-white px-6 py-2 rounded-full text-[10px] font-bold shadow-xl border-2 border-white pointer-events-none uppercase tracking-wider">
-          Click để thêm điểm ranh giới
+        <div className="absolute top-4 left-4 z-[1000] w-72 sm:w-80">
+          <form onSubmit={handleSearch} className="relative shadow-2xl">
+            <div className="flex items-center bg-white rounded-xl border-2 border-blue-500/30 overflow-hidden focus-within:border-blue-500 transition-all">
+              <div className="pl-3 text-slate-400">
+                {isSearching ? <Loader2 size={18} className="animate-spin text-blue-500" /> : <Search size={18} />}
+              </div>
+              <input 
+                type="text" 
+                placeholder="Tìm địa chỉ (VD: 123 Lê Lợi...)" 
+                className="w-full px-3 py-2.5 text-sm outline-none font-medium text-slate-700"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onFocus={() => setShowResults(searchResults.length > 0)}
+              />
+              {searchQuery && (
+                <button 
+                  type="button" 
+                  onClick={() => { setSearchQuery(''); setSearchResults([]); setShowResults(false); }}
+                  className="pr-3 text-slate-400 hover:text-slate-600"
+                >
+                  <X size={16} />
+                </button>
+              )}
+            </div>
+
+            {/* Dropdown Results */}
+            {showResults && searchResults.length > 0 && (
+              <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-2xl border border-slate-100 overflow-hidden divide-y divide-slate-50 max-h-64 overflow-y-auto custom-scrollbar">
+                {searchResults.map((res, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => selectResult(res)}
+                    className="w-full text-left px-4 py-3 hover:bg-blue-50 transition-colors flex items-start gap-3"
+                  >
+                    <MapPin size={16} className="text-blue-500 shrink-0 mt-0.5" />
+                    <div className="min-w-0">
+                      <p className="text-xs font-bold text-slate-800 truncate leading-tight mb-0.5">
+                        {res.address.house_number || ''} {res.address.road || ''}
+                      </p>
+                      <p className="text-[10px] text-slate-500 line-clamp-2 leading-relaxed">
+                        {res.display_name}
+                      </p>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
+          </form>
+        </div>
+      )}
+
+      {isSelectMode && (
+        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[999] bg-blue-600 text-white px-6 py-2 rounded-full text-[10px] font-black shadow-xl border-2 border-white pointer-events-none uppercase tracking-wider flex items-center gap-2">
+          <Navigation size={12} className="animate-pulse" /> Click bản đồ để ghim vị trí
         </div>
       )}
     </div>
