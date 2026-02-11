@@ -5,7 +5,7 @@ import react from '@vitejs/plugin-react';
 export default defineConfig(({ mode }) => {
     const env = loadEnv(mode, '.', '');
     return {
-      //base: './', // Đảm bảo chạy đúng trên GitHub Pages dù là thư mục con
+      base: './', // Đảm bảo chạy đúng trên GitHub Pages dù là thư mục con
       build: {
         outDir: 'dist',
         assetsDir: 'assets',
